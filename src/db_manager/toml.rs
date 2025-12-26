@@ -52,7 +52,7 @@ fn read_games_file(path: &Path) -> Result<GamesFile, KaguyaError> {
 }
 
 /// Read config.toml from Kaguya config directory, deserialize from TOML to string
-fn read_config_file(path: &Path) -> Result<GamesFile, KaguyaError> {
+pub fn read_config_file(path: &Path) -> Result<GamesFile, KaguyaError> {
     if path.exists() {
         let content = std::fs::read_to_string(path)?;
         Ok(toml::from_str(&content)?)

@@ -10,8 +10,6 @@ pub fn handle_config(
     subcommand: &ConfigSubcommands,
     context: &AppContext,
 ) -> Result<(), KaguyaError> {
-    // let config_service = ConfigService::new(cli)?;
-
     match subcommand {
         ConfigSubcommands::Add {
             id,

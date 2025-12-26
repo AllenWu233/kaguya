@@ -6,6 +6,8 @@ fn main() -> Result<(), KaguyaError> {
     let cli = Cli::parse();
     let context = AppContext::from_cli(&cli)?;
 
+    // dbg!(&cli);
+
     match &cli.command {
         Commands::Init => todo!(),
 
