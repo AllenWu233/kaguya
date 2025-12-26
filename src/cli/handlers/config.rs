@@ -1,12 +1,16 @@
 //! Handlers for all subcommands under the `kaguya config` command.
 
-use crate::cli::{Cli, ConfigSubcommands};
+use crate::cli::{AppContext, Cli, ConfigSubcommands, context};
 use crate::core::ConfigService;
 use crate::models::{AddGameRequest, KaguyaError};
+use std::path::PathBuf;
 
 /// Handles all `kaguya config` subcommands.
-pub fn handle_config(subcommand: &ConfigSubcommands, cli: &Cli) -> Result<(), KaguyaError> {
-    let config_service = ConfigService::new(cli)?;
+pub fn handle_config(
+    subcommand: &ConfigSubcommands,
+    context: &AppContext,
+) -> Result<(), KaguyaError> {
+    // let config_service = ConfigService::new(cli)?;
 
     match subcommand {
         ConfigSubcommands::Add {
@@ -14,22 +18,9 @@ pub fn handle_config(subcommand: &ConfigSubcommands, cli: &Cli) -> Result<(), Ka
             name,
             paths,
             comment,
-        } => {
-            dbg!(id, name, paths, comment);
+        } => handle_add_game(context, id, name, paths, comment)?,
 
-            let request = AddGameRequest {
-                id: id.clone(),
-                name: name.clone(),
-                paths: paths.clone(),
-                comment: comment.clone(),
-            };
-
-            config_service.add_game(request)?;
-
-            println!("Game {} added successfully!", id);
-        }
-
-        ConfigSubcommands::List { long } => todo!(),
+        ConfigSubcommands::List { long } => handle_list_games(context, long)?,
 
         ConfigSubcommands::Rm { id, purge } => todo!(),
     }
@@ -37,11 +28,29 @@ pub fn handle_config(subcommand: &ConfigSubcommands, cli: &Cli) -> Result<(), Ka
     Ok(())
 }
 
-// fn handle_add_game(
-//     service: &ConfigService,
-//     id: &String,
-//     name: &String,
-//     paths: &Vec<PathBuf>,
-//     comment: &Option<String>,
-// ) -> Result<(), KaguyaError> {
-// }
+/// Generate an 'AddGameRequest', send it to core service to add a new game
+fn handle_add_game(
+    context: &AppContext,
+    id: &String,
+    name: &Option<String>,
+    paths: &[PathBuf],
+    comment: &Option<String>,
+) -> Result<(), KaguyaError> {
+    let request = AddGameRequest {
+        id: id.clone(),
+        name: name.clone(),
+        paths: paths.to_vec(),
+        comment: comment.clone(),
+    };
+
+    ConfigService::add_or_update_game(context, request)?;
+    println!("Game added or updated successfully!");
+
+    Ok(())
+}
+
+/// List all games in the vault config file
+fn handle_list_games(context: &AppContext, long: &bool) -> Result<(), KaguyaError> {
+    ConfigService::list_games(context, long)?;
+    Ok(())
+}

@@ -23,11 +23,11 @@ pub struct Cli {
         value_name = "DIR",
         help = "Path to the Kaguya vault directory. Overrides the 'vault_path' in the config file"
     )]
-    pub vault_path: Option<PathBuf>,
+    pub vault: Option<PathBuf>,
 
     /// Run a command without making actual changes.
-    // #[arg(short = 'n', long, action = clap::ArgAction::SetTrue, global = true)]
-    // pub dry_run: bool,
+    #[arg(short = 'n', long, action = clap::ArgAction::SetTrue, global = true)]
+    pub dry_run: bool,
 
     /// Subcommands to execute.
     #[command(subcommand)]
@@ -59,7 +59,7 @@ pub enum ConfigSubcommands {
         id: String,
 
         /// A friendly name for the game
-        #[arg(short = 'n', long, value_name = "NAME")]
+        #[arg(short = 'a', long, value_name = "NAME")]
         name: Option<String>,
 
         /// One or more paths to save files or directories

@@ -1,10 +1,10 @@
 use clap::Parser;
-use kaguya::cli::{self, Cli, Commands};
+use kaguya::cli::{self, AppContext, Cli, Commands};
 use kaguya::models::KaguyaError;
 
 fn main() -> Result<(), KaguyaError> {
     let cli = Cli::parse();
-    dbg!(&cli);
+    let context = AppContext::from_cli(&cli)?;
 
     match &cli.command {
         Commands::Init => todo!(),
@@ -12,7 +12,7 @@ fn main() -> Result<(), KaguyaError> {
         Commands::Completion => todo!(),
 
         Commands::Config(subcommand) => {
-            cli::handle_config(subcommand, &cli)?;
+            cli::handle_config(subcommand, &context)?;
         }
     }
 

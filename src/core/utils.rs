@@ -1,29 +1,42 @@
-use crate::models::{DEFAULT_VAULT_DIR, DEFAULT_VAULT_SUBDIR, KaguyaError};
-use std::path::PathBuf;
+use crate::models::{
+    DEFAULT_CONFIG_DIR, DEFAULT_CONFIG_FILE, DEFAULT_VAULT_DIR, DEFAULT_VAULT_SUBDIR, GameConfig,
+    KaguyaError,
+};
+use std::path::{Path, PathBuf};
 
-/// Get Kaguya vault path, defaults to '~/.local/share/kaguya/vault' for Linux
-pub fn get_vault_path(path: &Option<PathBuf>) -> Result<PathBuf, KaguyaError> {
+/// Get Kaguya config path, defaults to '$XDG_CONFIG_HOME/kaguya/config.toml' for Linux.
+pub fn get_config_path<P: AsRef<Path>>(path: &Option<P>) -> Result<PathBuf, KaguyaError> {
     if let Some(p) = path {
-        return Ok(p.clone());
+        Ok(p.as_ref().to_path_buf())
+    } else {
+        let config_dir = dirs::config_dir().ok_or_else(|| {
+            KaguyaError::DirectoryNotFound("Could not find local data directory.".to_string())
+        })?;
+
+        let default_path = config_dir
+            .join(DEFAULT_CONFIG_DIR)
+            .join(DEFAULT_CONFIG_FILE);
+
+        Ok(default_path)
     }
-
-    let data_dir = dirs::data_local_dir().ok_or_else(|| {
-        KaguyaError::DirectoryNotFound("Could not find local data directory.".to_string())
-    })?;
-
-    let default_path = data_dir.join(DEFAULT_VAULT_DIR).join(DEFAULT_VAULT_SUBDIR);
-
-    Ok(default_path)
 }
 
-// pub fn get_vault_path(path: &Option<PathBuf>) -> PathBuf {
-//     if let Some(p) = path {
-//         return p.to_path_buf();
-//     }
-//
-//     if let Some(d) = dirs::data_dir() {
-//         return d.join(DEFAULT_VAULT_DIR).join(DEFAULT_VAULT_SUBDIR);
-//     }
-//
-//     return "".into();
-// }
+/// Get Kaguya vault path, defaults to '~/.local/share/kaguya/vault' for Linux.
+pub fn get_vault_path<P: AsRef<Path>>(path: &Option<P>) -> Result<PathBuf, KaguyaError> {
+    if let Some(p) = path {
+        Ok(p.as_ref().to_path_buf())
+    } else {
+        let data_dir = dirs::data_local_dir().ok_or_else(|| {
+            KaguyaError::DirectoryNotFound("Could not find local data directory.".to_string())
+        })?;
+
+        let default_path = data_dir.join(DEFAULT_VAULT_DIR).join(DEFAULT_VAULT_SUBDIR);
+
+        Ok(default_path)
+    }
+}
+
+/// Finds a game by ID in the configuration game list and return a mutable reference.
+pub fn find_game_mut<'a>(games: &'a mut Vec<GameConfig>, id: &str) -> Option<&'a mut GameConfig> {
+    games.iter_mut().find(|g| g.id == id)
+}
