@@ -22,6 +22,6 @@ pub enum KaguyaError {
     DirectoryNotFound(String),
 
     /// Represents a custom business logic error.
-    #[error("A game with ID '{0}' already exists.")]
-    GameIdAlreadyExists(String),
+    #[error("A game with ID '{0}' not found.")]
+    GameNotFound(String),
 }

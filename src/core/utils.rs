@@ -37,6 +37,6 @@ pub fn get_vault_path<P: AsRef<Path>>(path: &Option<P>) -> Result<PathBuf, Kaguy
 }
 
 /// Finds a game by ID in the configuration game list and return a mutable reference.
-pub fn find_game_mut<'a>(games: &'a mut Vec<GameConfig>, id: &str) -> Option<&'a mut GameConfig> {
+pub fn find_game_mut<'a>(games: &'a mut [GameConfig], id: &str) -> Option<&'a mut GameConfig> {
     games.iter_mut().find(|g| g.id == id)
 }
