@@ -17,11 +17,15 @@ pub enum KaguyaError {
     #[error("Could not serialize data to TOML: {0}")]
     TomlSerializeError(#[from] toml::ser::Error),
 
-    /// An error for when a directory cannot be found.
-    #[error("Could not find directory: {0}")]
-    DirectoryNotFound(String),
+    /// An error for when a path cannot be found.
+    #[error("Could not find path: {0}")]
+    PathNotFound(String),
 
     /// Represents a custom business logic error.
     #[error("A game with ID '{0}' not found.")]
     GameNotFound(String),
+
+    /// An error for when cannot get a file name from path
+    #[error("Cound not determine file name from {0}")]
+    FileNameError(String),
 }

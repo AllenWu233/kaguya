@@ -7,7 +7,7 @@ use std::path::PathBuf;
 pub struct AddGameRequest<'a> {
     pub id: &'a str,
     pub name: Option<&'a str>,
-    pub paths: &'a Vec<PathBuf>,
+    pub paths: Option<&'a Vec<PathBuf>>,
     pub comment: Option<&'a str>,
 }
 

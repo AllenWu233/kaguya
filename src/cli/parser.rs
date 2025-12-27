@@ -64,7 +64,7 @@ pub enum ConfigSubcommands {
 
         /// One or more paths to save files or directories
         #[arg(short = 'p', long, value_name = "PATH", num_args = 1..)]
-        paths: Vec<PathBuf>,
+        paths: Option<Vec<PathBuf>>,
 
         /// Comment for the game
         #[arg(short = 'o', long, value_name = "COMMENT")]

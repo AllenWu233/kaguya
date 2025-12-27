@@ -30,7 +30,13 @@ impl GameConfig {
         Self {
             id: request.id.to_string(),
             name: request.name.map(|n| n.to_string()),
-            paths: request.paths.to_vec(),
+            paths: {
+                if request.paths.is_some() {
+                    request.paths.unwrap().to_vec()
+                } else {
+                    Vec::<PathBuf>::new()
+                }
+            },
             comment: request.comment.map(|c| c.to_string()),
             keep_versions: None,
         }

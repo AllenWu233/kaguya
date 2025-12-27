@@ -22,7 +22,7 @@ pub fn handle_config(
             let request = AddGameRequest {
                 id,
                 name: name.as_deref(),
-                paths,
+                paths: paths.as_ref(),
                 comment: comment.as_deref(),
             };
             ConfigService::add_or_update_game(context, request)?

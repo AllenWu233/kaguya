@@ -27,13 +27,12 @@ pub fn add_or_update_game_to_file(
     } else {
         // Game not exists, add a new one.
         println!("Adding game '{}'...", &request.id);
-        // Create the new GameConfig from the request.
+
         let new_game = GameConfig::from_request(request);
-        // Add the new game to the list.
         games_config_contents.games.push(new_game);
     }
     println!("Game added or updated successfully!");
-    // Serialize and save string to games.toml
+
     save_to_file(games_config_path, &games_config_contents)
 }
 
@@ -42,11 +41,14 @@ pub fn add_or_update_game_to_file(
 // See also `GameConfig`
 fn apply_update(exist: &mut GameConfig, request: &AddGameRequest) -> Result<(), KaguyaError> {
     // Merge paths: combine old and new, remove duplicates
-    let mut combined_paths = exist.paths.clone();
-    for path in request.paths {
-        if !combined_paths.contains(path) {
-            combined_paths.push(path.to_path_buf());
+    if request.paths.is_some() {
+        let mut combined_paths = exist.paths.clone();
+        for path in request.paths.unwrap() {
+            if !combined_paths.contains(path) {
+                combined_paths.push(path.to_path_buf());
+            }
         }
+        exist.paths = combined_paths;
     }
 
     if request.name.is_some() {
