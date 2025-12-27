@@ -4,7 +4,10 @@ use serde::Serialize;
 
 use crate::{
     core::utils::find_game_mut,
-    models::{AddGameRequest, GameConfig, GamesFile, KaguyaError, global_config::GlobalConfig},
+    models::{
+        AddGameRequest, GameConfig, GamesFile, KaguyaError, ListGameRequest,
+        global_config::GlobalConfig,
+    },
 };
 use std::path::Path;
 
@@ -17,7 +20,7 @@ pub fn add_or_update_game_to_file(
     let mut games_config_contents: GamesFile = read_games_file(games_config_path)?;
 
     // Find the game if it exists
-    if let Some(existing_game) = find_game_mut(&mut games_config_contents.games, &request.id) {
+    if let Some(existing_game) = find_game_mut(&mut games_config_contents.games, request.id) {
         // Game exists, update it.
         println!("Updating existing game '{}' ...", &request.id);
         apply_update(existing_game, &request)?;
@@ -40,17 +43,17 @@ pub fn add_or_update_game_to_file(
 fn apply_update(exist: &mut GameConfig, request: &AddGameRequest) -> Result<(), KaguyaError> {
     // Merge paths: combine old and new, remove duplicates
     let mut combined_paths = exist.paths.clone();
-    for path in &request.paths {
+    for path in request.paths {
         if !combined_paths.contains(path) {
             combined_paths.push(path.to_path_buf());
         }
     }
 
     if request.name.is_some() {
-        exist.name = request.name.clone();
+        exist.name = request.name.map(|n| n.to_string())
     }
     if request.comment.is_some() {
-        exist.comment = request.comment.clone();
+        exist.comment = request.comment.map(|c| c.to_string())
     }
 
     Ok(())
@@ -58,7 +61,7 @@ fn apply_update(exist: &mut GameConfig, request: &AddGameRequest) -> Result<(), 
 
 /// Read vault games config file, list all the games
 /// Print detailed information if 'long' flag is true
-pub fn list_games_form_file(path: &Path, long: &bool) -> Result<(), KaguyaError> {
+pub fn list_games_form_file(path: &Path, request: &ListGameRequest) -> Result<(), KaguyaError> {
     let games_config_file: GamesFile = read_games_file(path)?;
     if games_config_file.games.is_empty() {
         println!("Games list is empty, use 'kaguya config add' to add some games.");
@@ -68,7 +71,7 @@ pub fn list_games_form_file(path: &Path, long: &bool) -> Result<(), KaguyaError>
         return Ok(());
     }
 
-    if *long {
+    if *request.long {
         // Print detailed games list
         for game in &games_config_file.games {
             println!("Game ID: {}", game.id);
@@ -99,7 +102,7 @@ pub fn list_games_form_file(path: &Path, long: &bool) -> Result<(), KaguyaError>
 }
 
 /// Remove a game configuration in games.toml, backups remain.
-pub fn rm_game_in_file(path: &Path, id: &String) -> Result<(), KaguyaError> {
+pub fn rm_game_in_file(path: &Path, id: &str) -> Result<(), KaguyaError> {
     // Deserialize and read string from config.toml
     let mut games_config_contents: GamesFile = read_games_file(path)?;
 

@@ -38,18 +38,16 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    /// Initialize config, database and vault for kaguya
-    Init,
-
     /// Generate shell completion file of kaguya
     Completion,
 
     /// Managing global Kaguya config
     #[command(subcommand)]
     Config(ConfigSubcommands),
-    // /// Manage vault of kaguya
-    // #[command(subcommand)]
-    // Vault(VaultSubcommands),
+
+    /// Manage vault of kaguya
+    #[command(subcommand)]
+    Vault(VaultSubcommands),
 }
 
 #[derive(Debug, Subcommand)]
@@ -69,25 +67,84 @@ pub enum ConfigSubcommands {
         paths: Vec<PathBuf>,
 
         /// Comment for the game
-        #[arg(short = 'c', long, value_name = "COMMENT")]
+        #[arg(short = 'o', long, value_name = "COMMENT")]
         comment: Option<String>,
     },
 
     /// Print game backup config information
     List {
         /// Print detailed information
-        #[arg(short, long)]
+        #[arg(short = 'l', long)]
         long: bool,
     },
 
     /// Remove existing game config, retain backups at default
     Rm {
         /// Game ID
-        #[arg(short, long)]
+        #[arg(short = 'i', long)]
         id: String,
 
         /// Cascade delete all backups associated with the game config
-        #[arg(short, long)]
+        #[arg(short = 'r', long)]
         purge: bool,
     },
+}
+
+#[derive(Debug, Subcommand)]
+pub enum VaultSubcommands {
+    /// Backup games saves and configurations to vault
+    Backup {
+        /// Game ID
+        /// leave empty to backup globally
+        #[arg(short, long)]
+        id: Option<String>,
+
+        /// Game saves and configurations paths (use with '--id/-i <ID>')
+        /// Leave empty to backup all paths in the config
+        #[arg(short, long, action = clap::ArgAction::Append, requires = "id")]
+        paths: Option<Vec<PathBuf>>,
+    },
+
+    /// Restore saves and configurations from backups in vault
+    Restore {
+        /// Game ID
+        #[arg(short, long)]
+        id: String,
+
+        /// Backup version (default: latest)
+        #[arg(short, long)]
+        version: Option<String>,
+
+        /// Game saves and configurations paths (use with '--id/-i <ID>')
+        /// Leave empty to restore all paths in the config
+        #[arg(short, long, action = clap::ArgAction::Append, requires = "id")]
+        paths: Vec<PathBuf>,
+    },
+
+    /// Prune old backups based on retention policy,
+    /// or delete specific backups
+    Prune {
+        /// Game ID (leave empty to prune globally)
+        #[arg(short, long)]
+        id: Option<String>,
+
+        /// Specific a backup version to delete (use with '--id/-d <ID>')
+        #[arg(short, long, requires = "id")]
+        version: Option<String>,
+
+        /// Delete all the backup versions of the game (use with '--id/-d <ID>')
+        #[arg(short, long, requires = "id")]
+        purge: bool,
+    },
+
+    /// Print backup, restore and prune history
+    History {
+        /// Game ID (leave empty for all games)
+        #[arg(short, long)]
+        id: Option<String>,
+    },
+
+    /// Check integrity of all backups
+    /// (verify file existence and hash consistency and metadata validity)
+    Check,
 }

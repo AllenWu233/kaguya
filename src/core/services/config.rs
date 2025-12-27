@@ -1,6 +1,6 @@
 use crate::cli::AppContext;
 use crate::db_manager::toml::{add_or_update_game_to_file, list_games_form_file, rm_game_in_file};
-use crate::models::{AddGameRequest, KaguyaError};
+use crate::models::{AddGameRequest, KaguyaError, ListGameRequest, RmGameRequest};
 
 /// Managing actions for 'kaguya config' command
 pub struct ConfigService;
@@ -19,20 +19,19 @@ impl ConfigService {
     }
 
     /// List all games in games.toml
-    /// use 'long' flag to list detailed information.
-    pub fn list_games(context: &AppContext, long: &bool) -> Result<(), KaguyaError> {
-        list_games_form_file(&context.games_path, long)
+    pub fn list_games(context: &AppContext, request: &ListGameRequest) -> Result<(), KaguyaError> {
+        list_games_form_file(&context.games_path, request)
     }
 
     /// Remove a game config by ID in games.toml
     /// If 'purge' flag is true, backups of the game will NOT retain!
-    pub fn rm_game(context: &AppContext, id: &String, purge: &bool) -> Result<(), KaguyaError> {
-        if *purge {
-            rm_game_in_file(&context.games_path, id)?;
+    pub fn rm_game(context: &AppContext, request: &RmGameRequest) -> Result<(), KaguyaError> {
+        if *request.purge {
+            rm_game_in_file(&context.games_path, request.id)?;
 
-            todo!("Remove game backups action to be done...")
+            todo!("Todo: Remove game backups action")
         } else {
-            rm_game_in_file(&context.games_path, id)
+            rm_game_in_file(&context.games_path, request.id)
         }
     }
 }

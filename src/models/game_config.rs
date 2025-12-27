@@ -1,14 +1,6 @@
+use crate::models::AddGameRequest;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-
-/// Represents a request to add a new game, coming directly from the CLI
-#[derive(Debug)]
-pub struct AddGameRequest {
-    pub id: String,
-    pub name: Option<String>,
-    pub paths: Vec<PathBuf>,
-    pub comment: Option<String>,
-}
 
 /// Represents a complete game configuration stored in the config file
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -36,10 +28,10 @@ impl GameConfig {
     /// Creates a 'GameConfig' from 'AddGameRequest'
     pub fn from_request(request: AddGameRequest) -> Self {
         Self {
-            id: request.id,
-            name: request.name,
-            paths: request.paths,
-            comment: request.comment,
+            id: request.id.to_string(),
+            name: request.name.map(|n| n.to_string()),
+            paths: request.paths.to_vec(),
+            comment: request.comment.map(|c| c.to_string()),
             keep_versions: None,
         }
     }
