@@ -21,11 +21,20 @@ pub enum KaguyaError {
     #[error("Could not find path: {0}")]
     PathNotFound(String),
 
-    /// Represents a custom business logic error.
-    #[error("A game with ID '{0}' not found.")]
-    GameNotFound(String),
-
     /// An error for when cannot get a file name from path
     #[error("Cound not determine file name from {0}")]
     FileNameError(String),
+
+    #[error("Database connection error: {0}")]
+    Connection(#[from] rusqlite::Error),
+
+    /// Represents a custom business logic error.
+    #[error("Game with id '{0}' not found.")]
+    GameNotFound(String),
+
+    #[error("Backup with ID '{0}' not found.")]
+    BackupNotFound(i64),
+
+    #[error("No paths configured for game with external_id '{0}'.")]
+    NoPathsConfigured(String),
 }
