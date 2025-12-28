@@ -12,6 +12,10 @@ Linux game saves and configurations backup manager for CLI enjoyers.
 
 ## Quick Start
 
+```shell
+kaguya --help
+```
+
 ## Installation
 
 ## Uninstallation
