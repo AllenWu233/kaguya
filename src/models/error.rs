@@ -25,8 +25,8 @@ pub enum KaguyaError {
     #[error("Cound not determine file name from {0}")]
     FileNameError(String),
 
-    #[error("Database connection error: {0}")]
-    Connection(#[from] rusqlite::Error),
+    #[error("Database error: {0}")]
+    Database(#[from] rusqlite::Error),
 
     /// Represents a custom business logic error.
     #[error("Game with id '{0}' not found.")]

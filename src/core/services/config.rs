@@ -1,4 +1,5 @@
 use crate::cli::AppContext;
+use crate::db_manager::DbManager;
 use crate::db_manager::toml::{add_or_update_game_to_file, list_games_form_file, rm_game_in_file};
 use crate::models::{AddGameRequest, KaguyaError, ListGameRequest, RmGameRequest};
 
@@ -21,6 +22,44 @@ impl ConfigService {
     /// List all games in games.toml
     pub fn list_games(context: &AppContext, request: &ListGameRequest) -> Result<(), KaguyaError> {
         list_games_form_file(&context.games_path, request)
+
+        // let conn = DbManager::new(&context.vault_path)?;
+        // let games = conn.get_games_list()?;
+        //
+        // if games.is_empty() {
+        //     println!("Games list is empty, use 'kaguya config add' to add some games.");
+        //     println!(
+        //         "If you already have a Kaguya vault, check '-v/--vault' option or 'vault' in the config file."
+        //     );
+        //     return Ok(());
+        // }
+        //
+        // if *request.long {
+        //     // Print detailed games list
+        //     for game in games {
+        //         println!("Game ID: {}", game.id);
+        //         println!("Name: {}", game.name.clone().unwrap_or_default());
+        //         println!("Comment: {}", game.comment.clone().unwrap_or_default());
+        //         println!("Saves and configuration paths:");
+        //         for path in &game.paths {
+        //             println!("\t- {}", path.to_string_lossy());
+        //         }
+        //         println!();
+        //     }
+        // } else {
+        //     // Print concise games list
+        //     for game in games {
+        //         println!("Game ID: {}", game.id);
+        //         println!("Saves and configuration paths:");
+        //         for path in &game.paths {
+        //             println!(
+        //                 "\t- {}",
+        //                 path.file_name().unwrap_or_default().to_string_lossy()
+        //             );
+        //         }
+        //         println!();
+        //     }
+        // }
     }
 
     /// Remove a game config by ID in games.toml

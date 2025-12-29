@@ -4,12 +4,13 @@ use kaguya::models::KaguyaError;
 
 fn main() -> Result<(), KaguyaError> {
     let cli = Cli::parse();
-    let context = AppContext::from_cli(&cli)?;
+    let context = AppContext::new(&cli)?;
 
-    // dbg!(&cli);
+    dbg!(&cli);
+    dbg!(&context);
 
     match &cli.command {
-        Commands::Completion => todo!(),
+        Commands::Completion => todo!("Generate shell completion"),
 
         Commands::Config(subcommand) => {
             cli::handle_config(subcommand, &context)?;

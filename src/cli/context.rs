@@ -5,30 +5,35 @@ use std::path::PathBuf;
 use crate::{
     cli::Cli,
     core::utils::{get_config_path, get_vault_path},
-    models::{GAMES_FILE, KaguyaError},
+    db_manager::DbManager,
+    models::{DB_FILE, GAMES_FILE, KaguyaError},
 };
 
 /// Represents the parsed and resolved global context for the application.
 /// This struct holds global values like the vault path, dry-run flag, etc.
+/// Also, it generates a database connection.
 #[derive(Debug)]
 pub struct AppContext {
     pub vault_path: PathBuf,
     pub games_path: PathBuf,
     pub config_path: PathBuf,
     pub dry_run: bool,
+    pub db: DbManager,
 }
 
 impl AppContext {
-    pub fn from_cli(cli: &Cli) -> Result<Self, KaguyaError> {
+    pub fn new(cli: &Cli) -> Result<Self, KaguyaError> {
         let vault_path = get_vault_path(&cli.vault)?;
         let config_path = get_config_path(&cli.config)?;
         let games_path = vault_path.join(GAMES_FILE);
+        let db_path = vault_path.join(DB_FILE);
 
         Ok(Self {
             vault_path,
             games_path,
             config_path,
             dry_run: cli.dry_run,
+            db: DbManager::new(&db_path)?,
         })
     }
 }
