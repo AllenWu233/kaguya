@@ -28,7 +28,7 @@ pub fn add_or_update_game_to_file(
         // Game not exists, add a new one.
         println!("Adding game '{}'...", &request.id);
 
-        let new_game = GameConfig::from_request(request);
+        let new_game = GameConfig::from(request);
         games_config_contents.games.push(new_game);
     }
     println!("Game added or updated successfully!");

@@ -14,11 +14,11 @@ use crate::{
 /// Also, it generates a database connection.
 #[derive(Debug)]
 pub struct AppContext {
+    pub db: DbManager,
     pub vault_path: PathBuf,
     pub games_path: PathBuf,
     pub config_path: PathBuf,
     pub dry_run: bool,
-    pub db: DbManager,
 }
 
 impl AppContext {
@@ -29,11 +29,11 @@ impl AppContext {
         let db_path = vault_path.join(DB_FILE);
 
         Ok(Self {
+            db: DbManager::new(&db_path, &games_path)?,
             vault_path,
             games_path,
             config_path,
             dry_run: cli.dry_run,
-            db: DbManager::new(&db_path)?,
         })
     }
 }

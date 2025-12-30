@@ -6,8 +6,7 @@ fn main() -> Result<(), KaguyaError> {
     let cli = Cli::parse();
     let context = AppContext::new(&cli)?;
 
-    dbg!(&cli);
-    dbg!(&context);
+    // dbg!(&cli, &context);
 
     match &cli.command {
         Commands::Completion => todo!("Generate shell completion"),

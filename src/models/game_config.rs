@@ -21,22 +21,16 @@ pub struct GameConfig {
 
     /// How many versions to keep when acting prune, cover global config
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub keep_versions: Option<u32>,
+    pub keep_versions: Option<i64>,
 }
 
-impl GameConfig {
+impl<'a> From<AddGameRequest<'a>> for GameConfig {
     /// Creates a 'GameConfig' from 'AddGameRequest'
-    pub fn from_request(request: AddGameRequest) -> Self {
+    fn from(request: AddGameRequest) -> Self {
         Self {
             id: request.id.to_string(),
             name: request.name.map(|n| n.to_string()),
-            paths: {
-                if request.paths.is_some() {
-                    request.paths.unwrap().to_vec()
-                } else {
-                    Vec::<PathBuf>::new()
-                }
-            },
+            paths: request.paths.map(|p| p.to_vec()).unwrap_or_default(),
             comment: request.comment.map(|c| c.to_string()),
             keep_versions: None,
         }

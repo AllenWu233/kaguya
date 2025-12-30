@@ -1,23 +1,27 @@
-//! Initialize or connect SQLite DB
+//! Initialize or connect to SQLite DB
 
-use crate::models::{Game, GamePath, KaguyaError};
+use crate::{
+    db_manager::toml::read_games_file,
+    fs_utils::hash::calculate_file_hash,
+    models::{Game, GamesFile, KaguyaError},
+};
 use rusqlite::Connection;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug)]
 pub struct DbManager {
     conn: Connection,
 }
 
-/// Database initialize and synchronic
+/// Database initialize and sync
 impl DbManager {
     // If no kaguya SQLite DB exists, initialize it.
     // Otherwise, sync with games config file if needed
-    pub fn new(path: &PathBuf) -> Result<Self, KaguyaError> {
-        let conn = Connection::open(path)?;
+    pub fn new(db_path: &Path, games_config_path: &Path) -> Result<Self, KaguyaError> {
+        let conn = Connection::open(db_path)?;
         let mut manager = Self { conn };
         manager.ensure_initialized()?;
-        manager.sync_if_needed()?;
+        manager.sync_if_needed(games_config_path)?;
         Ok(manager)
     }
 
@@ -28,17 +32,20 @@ impl DbManager {
             |row| row.get::<_, String>(0),
         );
 
-        dbg!(&result);
+        // dbg!(&result);
 
         match result {
             Ok(_version) => {
                 // eprintln!("Database is up to date (schema version: {}).", version);
             }
-            Err(rusqlite::Error::QueryReturnedNoRows) => {
-                eprintln!("Database not found. Initializing new database...");
-                self.run_initialize_schema()?;
+            Err(e) => {
+                if e.to_string().contains("no such table") {
+                    println!("Database not found. Initializing new database...");
+                    self.run_initialize_schema()?;
+                } else {
+                    return Err(KaguyaError::from(e));
+                }
             }
-            Err(e) => return Err(KaguyaError::from(e)),
         }
 
         Ok(())
@@ -52,7 +59,10 @@ impl DbManager {
         Ok(())
     }
 
-    fn sync_if_needed(&mut self) -> Result<(), KaguyaError> {
+    // Sync database if games config file have been changed
+    // Do nothing if games config file doesn't exist
+    fn sync_if_needed(&mut self, games_config_path: &Path) -> Result<(), KaguyaError> {
+        // Return None if games_config_hash == NULL
         let last_synced_hash: Option<String> = self
             .conn
             .query_row(
@@ -62,7 +72,27 @@ impl DbManager {
             )
             .ok();
 
-        todo!("Sync database")
+        let db_hash_record = last_synced_hash;
+        let file_hash = calculate_file_hash(games_config_path).ok();
+
+        dbg!(&db_hash_record, &file_hash);
+
+        // Database isn't up to date with games config file
+        if file_hash.is_some() && db_hash_record != file_hash {
+            println!("Games config file has changed, syncing database...");
+
+            let game_config_file: GamesFile = read_games_file(games_config_path)?;
+            for game_config in game_config_file.games {
+                let game = Game::from(game_config);
+                self.insert_or_update_game(game)?;
+            }
+
+            // Update games config file hash in the DB
+            self.update_meta_value("games_config_hash", &file_hash.unwrap_or_default())?;
+
+            println!("Database synced successfully.");
+        }
+        Ok(())
     }
 }
 
@@ -116,5 +146,53 @@ impl DbManager {
 
         let paths = paths_iter.collect::<Result<Vec<_>, rusqlite::Error>>()?;
         Ok(paths)
+    }
+
+    /// Create or update a game record to the DB, return game.id
+    pub fn insert_or_update_game(&self, game: Game) -> Result<i64, KaguyaError> {
+        let mut stmt = self.conn.prepare(
+            "INSERT INTO game (external_id, name, comment, keep_versions, created_at, updated_at)
+                    VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+                    ON CONFLICT(external_id) DO UPDATE SET
+                    name = excluded.name,
+                    comment = excluded.comment,
+                    keep_versions = excluded.keep_versions,
+                    updated_at = excluded.updated_at",
+        )?;
+
+        stmt.execute((
+            &game.external_id,
+            &game.name,
+            &game.comment,
+            &game.keep_versions,
+            &game.created_at,
+            &game.updated_at,
+        ))?;
+
+        let last_id = self.conn.last_insert_rowid();
+
+        if last_id > 0 {
+            println!(
+                "Add new game '{}' with ID: '{}'.",
+                game.name.unwrap_or_default(),
+                last_id
+            );
+        } else {
+            println!(
+                "Updated existing game '{}' with ID: '{}'.",
+                game.name.unwrap_or_default(),
+                last_id
+            );
+        }
+
+        Ok(last_id)
+    }
+
+    pub fn update_meta_value(&self, key: &str, value: &str) -> Result<(), KaguyaError> {
+        self.conn.execute(
+            "INSERT OR REPLACE INTO kaguya_meta (key, value) VALUES (?1, ?2)",
+            (key, value),
+        )?;
+        Ok(())
     }
 }
