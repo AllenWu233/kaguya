@@ -2,11 +2,10 @@ use crate::models::{
     DEFAULT_CONFIG_DIR, DEFAULT_CONFIG_FILE, DEFAULT_VAULT_DIR, DEFAULT_VAULT_SUBDIR, GameConfig,
     KaguyaError,
 };
-use chrono::offset::Local;
 use std::path::{Path, PathBuf};
 
 /// Get Kaguya config path, defaults to '$XDG_CONFIG_HOME/kaguya/config.toml' for Linux.
-pub fn get_config_path<P: AsRef<Path>>(path: &Option<P>) -> Result<PathBuf, KaguyaError> {
+pub fn get_config_path(path: &Option<impl AsRef<Path>>) -> Result<PathBuf, KaguyaError> {
     if let Some(p) = path {
         Ok(p.as_ref().to_path_buf())
     } else {
@@ -23,7 +22,7 @@ pub fn get_config_path<P: AsRef<Path>>(path: &Option<P>) -> Result<PathBuf, Kagu
 }
 
 /// Get Kaguya vault path, defaults to '~/.local/share/kaguya/vault' for Linux.
-pub fn get_vault_path<P: AsRef<Path>>(path: &Option<P>) -> Result<PathBuf, KaguyaError> {
+pub fn get_vault_path(path: &Option<impl AsRef<Path>>) -> Result<PathBuf, KaguyaError> {
     if let Some(p) = path {
         Ok(p.as_ref().to_path_buf())
     } else {
@@ -37,9 +36,11 @@ pub fn get_vault_path<P: AsRef<Path>>(path: &Option<P>) -> Result<PathBuf, Kaguy
     }
 }
 
-/// Get file name
-pub fn get_file_name(path: &Path) -> Option<String> {
-    path.file_name().map(|f| f.to_string_lossy().to_string())
+/// Get file name from a path string
+pub fn get_file_name(path: impl AsRef<Path>) -> Option<String> {
+    path.as_ref()
+        .file_name()
+        .map(|f| f.to_string_lossy().to_string())
 }
 
 /// Finds a game by ID in the configuration game list and return a mutable reference.
@@ -50,9 +51,4 @@ pub fn find_game_mut<'a>(games: &'a mut [GameConfig], id: &str) -> Option<&'a mu
 /// Finds a game by ID in the configuration game list and return a reference.
 pub fn find_game_ref<'a>(games: &'a [GameConfig], id: &str) -> Option<&'a GameConfig> {
     games.iter().find(|g| g.id == id)
-}
-
-/// Get formattary time string
-pub fn get_time_string() -> String {
-    Local::now().format("%Y-%m-%d_%H-%M-%S").to_string()
 }

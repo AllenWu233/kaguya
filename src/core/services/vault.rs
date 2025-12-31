@@ -1,9 +1,12 @@
 use crate::{
     cli::AppContext,
-    core::utils::{find_game_ref, get_file_name, get_time_string},
     db_manager::toml::read_games_file,
     fs_utils::archive::compress_to_tar_gz,
     models::{BackupRequest, GameConfig, KaguyaError},
+    utils::{
+        path::{find_game_ref, get_file_name},
+        time::get_time_string,
+    },
 };
 use std::path::{Path, PathBuf};
 
@@ -83,10 +86,7 @@ impl VaultService {
 
         println!("Compressing '{}'...", source_path.to_string_lossy());
         compress_to_tar_gz(source_path, &target)?;
-        println!(
-            "Compressed to '{}' finished.\n",
-            target_dir.to_string_lossy()
-        );
+        println!();
         Ok(())
     }
 }

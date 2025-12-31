@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::{cli::AppContext, core::utils::get_config_path};
+use crate::{cli::AppContext, utils::path::get_vault_path};
 use serde::{Deserialize, Serialize};
 
 /// Kaguya global config file
@@ -24,7 +24,7 @@ impl GlobalConfig {
 impl Default for GlobalConfig {
     fn default() -> Self {
         Self {
-            vault: get_config_path::<PathBuf>(&None).unwrap_or_default(),
+            vault: get_vault_path(&None::<PathBuf>).unwrap_or_default(),
             prune: false,
             keep_versions: 0,
         }

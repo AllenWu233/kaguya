@@ -29,12 +29,15 @@ pub enum KaguyaError {
     Database(#[from] rusqlite::Error),
 
     /// Represents a custom business logic error.
-    #[error("Game with id '{0}' not found.")]
+    #[error("Game with id '{0}' not found")]
     GameNotFound(String),
 
-    #[error("Backup with ID '{0}' not found.")]
+    #[error("Backup with ID '{0}' not found")]
     BackupNotFound(i64),
 
-    #[error("No paths configured for game with external_id '{0}'.")]
+    #[error("No paths configured for game with external_id '{0}'")]
     NoPathsConfigured(String),
+
+    #[error("{0}")]
+    InvalidInput(String),
 }

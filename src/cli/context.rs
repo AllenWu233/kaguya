@@ -4,9 +4,9 @@ use std::path::PathBuf;
 
 use crate::{
     cli::Cli,
-    core::utils::{get_config_path, get_vault_path},
     db_manager::DbManager,
     models::{DB_FILE, GAMES_FILE, KaguyaError},
+    utils::path::{get_config_path, get_vault_path},
 };
 
 /// Represents the parsed and resolved global context for the application.

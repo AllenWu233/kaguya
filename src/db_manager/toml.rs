@@ -3,11 +3,11 @@
 use serde::Serialize;
 
 use crate::{
-    core::utils::find_game_mut,
     models::{
         AddGameRequest, GameConfig, GamesFile, KaguyaError, ListGameRequest,
         global_config::GlobalConfig,
     },
+    utils::path::find_game_mut,
 };
 use std::path::Path;
 
