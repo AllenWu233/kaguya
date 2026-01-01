@@ -13,7 +13,7 @@ use std::path::Path;
 
 /// Adds a new game [`GameConfig`] to the vault games config file
 pub fn add_or_update_game_to_file(
-    games_config_path: &Path,
+    games_config_path: &impl AsRef<Path>,
     request: AddGameRequest,
 ) -> Result<(), KaguyaError> {
     // Deserialize and read string from games.toml
@@ -63,7 +63,10 @@ fn apply_update(exist: &mut GameConfig, request: &AddGameRequest) -> Result<(), 
 
 /// Read vault games config file, list all the games
 /// Print detailed information if 'long' flag is true
-pub fn list_games_form_file(path: &Path, request: &ListGameRequest) -> Result<(), KaguyaError> {
+pub fn list_games_form_file(
+    path: &impl AsRef<Path>,
+    request: &ListGameRequest,
+) -> Result<(), KaguyaError> {
     let games_config_file: GamesFile = read_games_file(path)?;
     if games_config_file.games.is_empty() {
         println!("Games list is empty, use 'kaguya config add' to add some games.");
@@ -104,7 +107,7 @@ pub fn list_games_form_file(path: &Path, request: &ListGameRequest) -> Result<()
 }
 
 /// Remove a game configuration in games.toml, backups remain.
-pub fn rm_game_in_file(path: &Path, id: &str) -> Result<(), KaguyaError> {
+pub fn rm_game_in_file(path: &impl AsRef<Path>, id: &str) -> Result<(), KaguyaError> {
     // Deserialize and read string from config.toml
     let mut games_config_contents: GamesFile = read_games_file(path)?;
 
@@ -121,7 +124,8 @@ pub fn rm_game_in_file(path: &Path, id: &str) -> Result<(), KaguyaError> {
 }
 
 // Read games.toml from vault, deserialize from TOML to string
-pub fn read_games_file(path: &Path) -> Result<GamesFile, KaguyaError> {
+pub fn read_games_file(path: &impl AsRef<Path>) -> Result<GamesFile, KaguyaError> {
+    let path = path.as_ref();
     if path.exists() {
         let content = std::fs::read_to_string(path)?;
         Ok(toml::from_str(&content)?)
@@ -141,7 +145,7 @@ fn _read_config_file(path: &Path) -> Result<GlobalConfig, KaguyaError> {
 }
 
 // Serialize [`GamesFile`] or [`GlobalConfig`] to TOML, and save it to toml file.
-fn save_to_file<F: Serialize>(path: &Path, contents: &F) -> Result<(), KaguyaError> {
+fn save_to_file(path: &impl AsRef<Path>, contents: &impl Serialize) -> Result<(), KaguyaError> {
     // Serialize the configuration back to TOML
     let toml_string = toml::to_string_pretty(contents)?;
 

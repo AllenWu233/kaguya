@@ -4,26 +4,30 @@ use crate::db_manager::toml::{add_or_update_game_to_file, list_games_form_file, 
 use crate::models::{AddGameRequest, KaguyaError, ListGameRequest, RmGameRequest};
 
 /// Managing actions for 'kaguya config' command
-pub struct ConfigService;
+pub struct ConfigService {
+    config: AppContext,
+    db: DbManager,
+}
 
 impl ConfigService {
-    /// Receive a 'AddGameRequest' and add a new game to games.toml file
-    pub fn add_or_update_game(
-        context: &AppContext,
-        request: AddGameRequest,
-    ) -> Result<(), KaguyaError> {
-        std::fs::create_dir_all(&context.vault_path)?;
+    pub fn new(config: AppContext, db: DbManager) -> Self {
+        Self { config, db }
+    }
 
-        add_or_update_game_to_file(&context.games_path, request)?;
+    /// Receive a 'AddGameRequest' and add a new game to games.toml file
+    pub fn add_or_update_game(&self, request: AddGameRequest) -> Result<(), KaguyaError> {
+        std::fs::create_dir_all(&self.config.vault_path)?;
+
+        add_or_update_game_to_file(&self.config.games_path, request)?;
 
         Ok(())
     }
 
-    /// List all games in games.toml
-    pub fn list_games(context: &AppContext, request: &ListGameRequest) -> Result<(), KaguyaError> {
-        list_games_form_file(&context.games_path, request)
+    /// List all games
+    pub fn list_games(&self, request: &ListGameRequest) -> Result<(), KaguyaError> {
+        list_games_form_file(&self.config.games_path, request)
 
-        // let conn = DbManager::new(&context.vault_path)?;
+        // let conn = DbManager::new(&self.vault_path)?;
         // let games = conn.get_games_list()?;
         //
         // if games.is_empty() {
@@ -64,13 +68,13 @@ impl ConfigService {
 
     /// Remove a game config by ID in games.toml
     /// If 'purge' flag is true, backups of the game will NOT retain!
-    pub fn rm_game(context: &AppContext, request: &RmGameRequest) -> Result<(), KaguyaError> {
+    pub fn rm_game(&self, request: &RmGameRequest) -> Result<(), KaguyaError> {
         if *request.purge {
-            rm_game_in_file(&context.games_path, request.id)?;
+            rm_game_in_file(&self.config.games_path, request.id)?;
 
             todo!("Todo: Remove game backups action")
         } else {
-            rm_game_in_file(&context.games_path, request.id)
+            rm_game_in_file(&self.config.games_path, request.id)
         }
     }
 }

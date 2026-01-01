@@ -3,6 +3,7 @@
 use crate::{
     cli::{AppContext, ConfigSubcommands},
     core::ConfigService,
+    db_manager::DbManager,
     models::{AddGameRequest, KaguyaError, RmGameRequest, requests::ListGameRequest},
 };
 
@@ -11,6 +12,9 @@ pub fn handle_config(
     subcommand: &ConfigSubcommands,
     context: &AppContext,
 ) -> Result<(), KaguyaError> {
+    let db = DbManager::new(&context.db_path, &context.games_path)?;
+    let config_service = ConfigService::new(context.clone(), db);
+
     match subcommand {
         ConfigSubcommands::Add {
             id,
@@ -25,17 +29,17 @@ pub fn handle_config(
                 paths: paths.as_ref(),
                 comment: comment.as_deref(),
             };
-            ConfigService::add_or_update_game(context, request)?
+            config_service.add_or_update_game(request)?
         }
 
         ConfigSubcommands::List { long } => {
             let request = ListGameRequest { long };
-            ConfigService::list_games(context, &request)?
+            config_service.list_games(&request)?
         }
 
         ConfigSubcommands::Rm { id, purge } => {
             let request = RmGameRequest { id, purge };
-            ConfigService::rm_game(context, &request)?
+            config_service.rm_game(&request)?
         }
     }
 

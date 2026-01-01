@@ -3,7 +3,9 @@ use kaguya::cli::{self, AppContext, Cli, Commands};
 use kaguya::models::KaguyaError;
 
 fn main() -> Result<(), KaguyaError> {
+    // CLI options
     let cli = Cli::parse();
+    // Global options
     let context = AppContext::new(&cli)?;
 
     // dbg!(&cli, &context);

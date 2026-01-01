@@ -1,6 +1,6 @@
 use crate::{
     cli::AppContext,
-    db_manager::toml::read_games_file,
+    db_manager::{DbManager, toml::read_games_file},
     fs_utils::archive::compress_to_tar_gz,
     models::{BackupRequest, GameConfig, KaguyaError},
     utils::{
@@ -11,16 +11,23 @@ use crate::{
 use std::path::{Path, PathBuf};
 
 /// Managing actions for 'kaguya vault' command
-pub struct VaultService;
+pub struct VaultService {
+    config: AppContext,
+    db: DbManager,
+}
 
 impl VaultService {
+    pub fn new(config: AppContext, db: DbManager) -> Self {
+        Self { config, db }
+    }
+
     /// Backup game saves and configuration.
     ///
     /// If no arguments are given, backup all games.
     /// If '--id' is given, backup specific game.
     /// If '--id' and '--paths' are given, backup specific paths
-    pub fn backup(context: &AppContext, request: BackupRequest) -> Result<(), KaguyaError> {
-        let games = read_games_file(&context.games_path)?.games;
+    pub fn backup(&self, request: BackupRequest) -> Result<(), KaguyaError> {
+        let games = read_games_file(&self.config.games_path)?.games;
 
         if request.id.is_some() {
             // Check whether game id exists or not.
@@ -34,16 +41,16 @@ impl VaultService {
 
             if request.paths.is_some() {
                 // '--id' and '--paths' are given.
-                Self::backup_single_game(context, game, request.paths)?;
+                self.backup_single_game(game, request.paths)?;
             } else {
                 // Only '--id' is given.
-                Self::backup_single_game(context, game, None)?;
+                self.backup_single_game(game, None)?;
                 return Ok(());
             }
         } else {
             // No arguments are given, Backup all games
             for game in &games {
-                Self::backup_single_game(context, game, None)?;
+                self.backup_single_game(game, None)?;
             }
         }
         Ok(())
@@ -51,12 +58,12 @@ impl VaultService {
 
     // Backup all saves and configuration of single game
     fn backup_single_game(
-        context: &AppContext,
+        &self,
         game: &GameConfig,
         paths: Option<&Vec<PathBuf>>,
     ) -> Result<(), KaguyaError> {
         let time_string = get_time_string();
-        let backup_version_path = context.vault_path.join(&game.id).join(time_string);
+        let backup_version_path = &self.config.vault_path.join(&game.id).join(time_string);
 
         if let Some(p) = paths {
             // '--paths' are given

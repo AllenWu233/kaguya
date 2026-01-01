@@ -3,21 +3,26 @@
 use crate::{
     db_manager::toml::read_games_file,
     fs_utils::hash::calculate_file_hash,
-    models::{Game, GamesFile, KaguyaError},
+    models::{Game, GamesFile, KaguyaError, game_config},
 };
 use rusqlite::Connection;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug)]
 pub struct DbManager {
-    conn: Connection,
+    pub conn: Connection,
 }
 
 /// Database initialize and sync
 impl DbManager {
     // If no kaguya SQLite DB exists, initialize it.
     // Otherwise, sync with games config file if needed
-    pub fn new(db_path: &Path, games_config_path: &Path) -> Result<Self, KaguyaError> {
+    pub fn new(
+        db_path: &impl AsRef<Path>,
+        games_config_path: &impl AsRef<Path>,
+    ) -> Result<Self, KaguyaError> {
+        // let game_config_path = games_config_path.as_ref();
+
         let conn = Connection::open(db_path)?;
         let mut manager = Self { conn };
         manager.ensure_initialized()?;
@@ -61,7 +66,7 @@ impl DbManager {
 
     // Sync database if games config file have been changed
     // Do nothing if games config file doesn't exist
-    fn sync_if_needed(&mut self, games_config_path: &Path) -> Result<(), KaguyaError> {
+    fn sync_if_needed(&mut self, games_config_path: &impl AsRef<Path>) -> Result<(), KaguyaError> {
         // Return None if games_config_hash == NULL
         let last_synced_hash: Option<String> = self
             .conn
