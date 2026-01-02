@@ -106,4 +106,4 @@ CREATE TABLE kaguya_meta (
 -- Tells us that the V1 schema has been successfully applied.
 INSERT OR IGNORE INTO kaguya_meta (key, value) VALUES ('schema_version', '1');
 -- Hash of the latest games config that the DB storages.
-INSERT OR IGNORE INTO kaguya_meta (key, value) VALUES ('games_config_hash', NULL);
+INSERT OR IGNORE INTO kaguya_meta (key, value) VALUES ('game_config_file_hash', NULL);

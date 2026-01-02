@@ -3,7 +3,7 @@
 pub use constants::*;
 pub use db::{Game, GamePath};
 pub use error::KaguyaError;
-pub use game_config::{GameConfig, GamesFile};
+pub use game_config::{GameConfig, GameConfigFile};
 pub use requests::{AddGameRequest, BackupRequest, ListGameRequest, RmGameRequest};
 
 pub mod constants;

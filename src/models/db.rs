@@ -11,7 +11,7 @@ pub struct Game {
     pub external_id: String,
 
     /// Friendly game name
-    pub name: Option<String>,
+    pub name: String,
 
     /// Alternative comment
     pub comment: Option<String>,
@@ -23,16 +23,16 @@ pub struct Game {
     pub updated_at: DateTime<Utc>,
 }
 
-impl From<GameConfig> for Game {
-    fn from(game: GameConfig) -> Self {
+impl From<&GameConfig> for Game {
+    fn from(game: &GameConfig) -> Self {
         let created_at = Utc::now();
         let updated_at = created_at;
 
         Self {
             id: None,
-            external_id: game.id,
-            name: game.name,
-            comment: game.comment,
+            external_id: game.id.clone(),
+            name: game.name.clone(),
+            comment: game.comment.clone(),
             keep_versions: game.keep_versions,
             created_at,
             updated_at,

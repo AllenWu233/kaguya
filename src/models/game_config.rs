@@ -3,14 +3,13 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 /// Represents a complete game configuration stored in the config file
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct GameConfig {
     /// Game ID
     pub id: String,
 
     /// Friendly game name, alternative
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
+    pub name: String,
 
     /// Saves and configurations paths
     pub paths: Vec<PathBuf>,
@@ -24,12 +23,14 @@ pub struct GameConfig {
     pub keep_versions: Option<i64>,
 }
 
-impl<'a> From<AddGameRequest<'a>> for GameConfig {
-    /// Creates a 'GameConfig' from 'AddGameRequest'
-    fn from(request: AddGameRequest) -> Self {
+impl<'a> From<&AddGameRequest<'a>> for GameConfig {
+    /// Creates a [`GameConfigFile`] from [`AddGameRequest`]
+    fn from(request: &AddGameRequest) -> Self {
         Self {
             id: request.id.to_string(),
-            name: request.name.map(|n| n.to_string()),
+            name: request
+                .name
+                .map_or_else(|| request.id.to_string(), |n| n.to_string()),
             paths: request.paths.map(|p| p.to_vec()).unwrap_or_default(),
             comment: request.comment.map(|c| c.to_string()),
             keep_versions: None,
@@ -38,6 +39,6 @@ impl<'a> From<AddGameRequest<'a>> for GameConfig {
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
-pub struct GamesFile {
+pub struct GameConfigFile {
     pub games: Vec<GameConfig>,
 }

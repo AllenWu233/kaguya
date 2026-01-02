@@ -1,6 +1,6 @@
 use crate::{
     cli::AppContext,
-    db_manager::{DbManager, toml::read_games_file},
+    db_manager::{DbManager, toml::read_game_config_file},
     fs_utils::archive::compress_to_tar_gz,
     models::{BackupRequest, GameConfig, KaguyaError},
     utils::{
@@ -27,7 +27,7 @@ impl VaultService {
     /// If '--id' is given, backup specific game.
     /// If '--id' and '--paths' are given, backup specific paths
     pub fn backup(&self, request: BackupRequest) -> Result<(), KaguyaError> {
-        let games = read_games_file(&self.config.games_path)?.games;
+        let games = read_game_config_file(&self.config.game_config_path)?.games;
 
         if request.id.is_some() {
             // Check whether game id exists or not.

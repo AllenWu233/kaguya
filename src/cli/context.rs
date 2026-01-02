@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use crate::{
     cli::Cli,
-    models::{DB_FILE, GAMES_FILE, KaguyaError},
+    models::{DB_FILE, GAME_CONFIG_FILE, KaguyaError},
     utils::path::{get_config_path, get_vault_path},
 };
 
@@ -14,7 +14,7 @@ use crate::{
 #[derive(Debug, Clone)]
 pub struct AppContext {
     pub vault_path: PathBuf,
-    pub games_path: PathBuf,
+    pub game_config_path: PathBuf,
     pub config_path: PathBuf,
     pub db_path: PathBuf,
     pub dry_run: bool,
@@ -24,12 +24,12 @@ impl AppContext {
     pub fn new(cli: &Cli) -> Result<Self, KaguyaError> {
         let vault_path = get_vault_path(&cli.vault)?;
         let config_path = get_config_path(&cli.config)?;
-        let games_path = vault_path.join(GAMES_FILE);
+        let game_config_path = vault_path.join(GAME_CONFIG_FILE);
         let db_path = vault_path.join(DB_FILE);
 
         Ok(Self {
             vault_path,
-            games_path,
+            game_config_path,
             config_path,
             db_path,
             dry_run: cli.dry_run,
