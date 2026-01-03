@@ -7,8 +7,7 @@
 
 use super::{DbManager, DbManagerGameExt, DbManagerGamePathExt, DbManagerMetaExt};
 use crate::{
-    db_manager::toml::read_game_config_file, fs_utils::hash::calculate_file_hash,
-    models::KaguyaError,
+    db_manager::toml::read_toml_file, fs_utils::hash::calculate_file_hash, models::KaguyaError,
 };
 use std::path::Path;
 
@@ -46,7 +45,7 @@ impl DbManager {
         game_config_path: &impl AsRef<Path>,
         new_hash: String,
     ) -> Result<(), KaguyaError> {
-        let game_config_file = read_game_config_file(game_config_path)?;
+        let game_config_file = read_toml_file(game_config_path)?;
 
         self.upsert_games_from_config(&game_config_file)?;
         self.prune_obsolete_games(&game_config_file)?;

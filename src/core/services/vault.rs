@@ -1,8 +1,8 @@
 use crate::{
     cli::AppContext,
-    db_manager::{DbManager, toml::read_game_config_file},
+    db_manager::{DbManager, toml::read_toml_file},
     fs_utils::archive::compress_to_tar_gz,
-    models::{BackupRequest, GameConfig, KaguyaError},
+    models::{BackupRequest, GameConfig, GameConfigFile, KaguyaError},
     utils::{
         path::{find_game_ref, get_file_name},
         time::get_time_string,
@@ -27,7 +27,7 @@ impl VaultService {
     /// If '--id' is given, backup specific game.
     /// If '--id' and '--paths' are given, backup specific paths
     pub fn backup(&self, request: BackupRequest) -> Result<(), KaguyaError> {
-        let games = read_game_config_file(&self.config.game_config_path)?.games;
+        let games = read_toml_file::<GameConfigFile>(&self.config.game_config_path)?.games;
 
         if request.id.is_some() {
             // Check whether game id exists or not.
@@ -73,13 +73,13 @@ impl VaultService {
                         path.to_string_lossy().to_string(),
                     ));
                 }
-                std::fs::create_dir_all(&backup_version_path)?;
-                Self::backup_single_path(path, &backup_version_path)?;
+                std::fs::create_dir_all(backup_version_path)?;
+                Self::backup_single_path(path, backup_version_path)?;
             }
         } else {
-            std::fs::create_dir_all(&backup_version_path)?;
+            std::fs::create_dir_all(backup_version_path)?;
             for path in &game.paths {
-                Self::backup_single_path(path, &backup_version_path)?;
+                Self::backup_single_path(path, backup_version_path)?;
             }
         }
         Ok(())

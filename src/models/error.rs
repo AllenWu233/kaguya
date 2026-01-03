@@ -5,10 +5,6 @@ use thiserror::Error;
 /// Unified error type for the Kaguya application.
 #[derive(Error, Debug)]
 pub enum KaguyaError {
-    ///
-    #[error("Game list is empty")]
-    EmptyGameList(),
-
     /// Represents an error from the file system I/O.
     #[error("File system error: {0}")]
     Io(#[from] std::io::Error),

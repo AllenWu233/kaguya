@@ -1,7 +1,7 @@
 use crate::cli::AppContext;
 use crate::db_manager::DbManager;
-use crate::db_manager::toml::{add_or_update_game_to_file, list_games_form_file, rm_game_in_file};
-use crate::models::{AddGameRequest, KaguyaError, ListGameRequest, RmGameRequest};
+use crate::db_manager::toml::{add_or_update_game_to_file, read_toml_file, rm_game_in_file};
+use crate::models::{AddGameRequest, GameConfig, GameConfigFile, KaguyaError, RmGameRequest};
 
 /// Managing actions for 'kaguya config' command
 pub struct ConfigService {
@@ -23,42 +23,8 @@ impl ConfigService {
         Ok(())
     }
 
-    /// List all games
-    pub fn list_games(&self, request: &ListGameRequest) -> Result<(), KaguyaError> {
-        list_games_form_file(&self.config.game_config_path, request)
-
-        // let games = &self.db.get_game_list()?;
-        // if games.is_empty() {
-        //     return Err(KaguyaError::EmptyGameList());
-        // }
-        //
-        // if *request.long {
-        //     // Print detailed games list
-        //     for game in games {
-        //         println!("Game ID: {}", game.external_id);
-        //         println!("Name: {}", game.name);
-        //         println!("Comment: {}", game.comment.unwrap_or_default());
-        //         println!("Saves and configuration paths:");
-        //         for path in &game.paths {
-        //             println!("\t- {}", path.to_string_lossy());
-        //         }
-        //         println!();
-        //     }
-        // } else {
-        //     // Print concise games list
-        //     for game in games {
-        //         println!("Game ID: {}", game.external_id);
-        //         println!("Saves and configuration paths:");
-        //         for path in &game.paths {
-        //             println!(
-        //                 "\t- {}",
-        //                 path.file_name().unwrap_or_default().to_string_lossy()
-        //             );
-        //         }
-        //         println!();
-        //     }
-        // }
-        // Ok(())
+    pub fn get_game_list(&self) -> Result<Vec<GameConfig>, KaguyaError> {
+        Ok(read_toml_file::<GameConfigFile>(&self.config.game_config_path)?.games)
     }
 
     /// Remove a game config by ID in the game config file
