@@ -46,3 +46,11 @@ pub struct GamePath {
     pub game_id: Option<i64>,
     pub original_path: String,
 }
+
+/// Use for `get_db_path_list`
+#[derive(Debug)]
+pub struct DbPathInfo {
+    pub id: i64,
+    pub external_id: String,
+    pub original_path: String,
+}

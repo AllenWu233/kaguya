@@ -27,23 +27,17 @@ impl ConfigService {
     pub fn list_games(&self, request: &ListGameRequest) -> Result<(), KaguyaError> {
         list_games_form_file(&self.config.game_config_path, request)
 
-        // let conn = DbManager::new(&self.vault_path)?;
-        // let games = conn.get_games_list()?;
-        //
+        // let games = &self.db.get_game_list()?;
         // if games.is_empty() {
-        //     println!("Games list is empty, use 'kaguya config add' to add some games.");
-        //     println!(
-        //         "If you already have a Kaguya vault, check '-v/--vault' option or 'vault' in the config file."
-        //     );
-        //     return Ok(());
+        //     return Err(KaguyaError::EmptyGameList());
         // }
         //
         // if *request.long {
         //     // Print detailed games list
         //     for game in games {
-        //         println!("Game ID: {}", game.id);
-        //         println!("Name: {}", game.name.clone().unwrap_or_default());
-        //         println!("Comment: {}", game.comment.clone().unwrap_or_default());
+        //         println!("Game ID: {}", game.external_id);
+        //         println!("Name: {}", game.name);
+        //         println!("Comment: {}", game.comment.unwrap_or_default());
         //         println!("Saves and configuration paths:");
         //         for path in &game.paths {
         //             println!("\t- {}", path.to_string_lossy());
@@ -53,7 +47,7 @@ impl ConfigService {
         // } else {
         //     // Print concise games list
         //     for game in games {
-        //         println!("Game ID: {}", game.id);
+        //         println!("Game ID: {}", game.external_id);
         //         println!("Saves and configuration paths:");
         //         for path in &game.paths {
         //             println!(
@@ -64,6 +58,7 @@ impl ConfigService {
         //         println!();
         //     }
         // }
+        // Ok(())
     }
 
     /// Remove a game config by ID in the game config file
