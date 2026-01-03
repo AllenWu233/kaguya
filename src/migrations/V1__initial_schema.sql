@@ -96,7 +96,7 @@ CREATE INDEX idx_event_timestamp ON event(timestamp);
 -- This table is crucial for knowing if the DB has been initialized
 -- or if vault games config have been updated or not
 -- =====================================
-CREATE TABLE kaguya_meta (
+CREATE TABLE meta (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
 );
@@ -104,6 +104,6 @@ CREATE TABLE kaguya_meta (
 -- Insert the initial schema version.
 --
 -- Tells us that the V1 schema has been successfully applied.
-INSERT OR IGNORE INTO kaguya_meta (key, value) VALUES ('schema_version', '1');
+INSERT OR IGNORE INTO meta (key, value) VALUES ('schema_version', '1');
 -- Hash of the latest games config that the DB storages.
-INSERT OR IGNORE INTO kaguya_meta (key, value) VALUES ('game_config_file_hash', NULL);
+INSERT OR IGNORE INTO meta (key, value) VALUES ('game_config_file_hash', NULL);
