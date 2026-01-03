@@ -13,7 +13,7 @@ pub fn handle_config(
     context: &AppContext,
 ) -> Result<(), KaguyaError> {
     let db = DbManager::new(&context.db_path, &context.vault_config_path)?;
-    let config_service = ConfigService::new(context.clone(), db);
+    let mut config_service = ConfigService::new(context.clone(), db);
 
     match subcommand {
         ConfigSubcommands::Add {

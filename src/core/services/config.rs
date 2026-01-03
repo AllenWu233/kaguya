@@ -1,5 +1,6 @@
 use crate::cli::AppContext;
 use crate::db_manager::DbManager;
+use crate::db_manager::sqlite::DbManagerSyncExt;
 use crate::db_manager::toml::{add_or_update_game_to_file, read_toml_file, rm_game_in_file};
 use crate::models::{AddGameRequest, GameConfig, KaguyaError, RmGameRequest, VaultConfig};
 
@@ -15,10 +16,11 @@ impl ConfigService {
     }
 
     /// Receive a [`AddGameRequest`] and add a new game to the vault config
-    pub fn add_or_update_game(&self, request: AddGameRequest) -> Result<(), KaguyaError> {
+    pub fn add_or_update_game(&mut self, request: AddGameRequest) -> Result<(), KaguyaError> {
         std::fs::create_dir_all(&self.config.vault_dir)?;
 
         add_or_update_game_to_file(&self.config.vault_config_path, request)?;
+        self.db.sync(&self.config.vault_config_path, true)?;
 
         Ok(())
     }

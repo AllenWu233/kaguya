@@ -63,7 +63,7 @@ impl VaultService {
         paths: Option<&Vec<PathBuf>>,
     ) -> Result<(), KaguyaError> {
         let time_string = get_time_string();
-        let backup_version_path = &self.config.vault_dir.join(&game.id).join(time_string);
+        let backup_version_dir = &self.config.backup_dir.join(&game.id).join(time_string);
 
         if let Some(p) = paths {
             // '--paths' are given
@@ -73,13 +73,13 @@ impl VaultService {
                         path.to_string_lossy().to_string(),
                     ));
                 }
-                std::fs::create_dir_all(backup_version_path)?;
-                Self::backup_single_path(path, backup_version_path)?;
+                std::fs::create_dir_all(backup_version_dir)?;
+                Self::backup_single_path(path, backup_version_dir)?;
             }
         } else {
-            std::fs::create_dir_all(backup_version_path)?;
+            std::fs::create_dir_all(backup_version_dir)?;
             for path in &game.paths {
-                Self::backup_single_path(path, backup_version_path)?;
+                Self::backup_single_path(path, backup_version_dir)?;
             }
         }
         Ok(())
@@ -87,12 +87,18 @@ impl VaultService {
 
     // Backup single path to target directory, get file name for targer archive file
     // e.g., '~/Games/game-a/saves/' -> '~/.local/bin/kaguya/vault/<ID>/<VERSION>/saves.tar.gz'
-    fn backup_single_path(source_path: &PathBuf, target_dir: &Path) -> Result<(), KaguyaError> {
-        let file_name = get_file_name(source_path).unwrap_or_default();
-        let target = target_dir.join(file_name + ".tar.gz");
+    fn backup_single_path(
+        src: &impl AsRef<Path>,
+        dst: &impl AsRef<Path>,
+    ) -> Result<(), KaguyaError> {
+        let src = src.as_ref();
+        let dst = dst.as_ref();
 
-        println!("Compressing '{}'...", source_path.to_string_lossy());
-        compress_to_tar_gz(source_path, &target)?;
+        let file_name = get_file_name(src).unwrap_or_default();
+        let backup_file = dst.join(file_name + ".tar.gz");
+
+        println!("Compressing '{}'...", src.to_string_lossy());
+        compress_to_tar_gz(&src, &backup_file)?;
         println!();
         Ok(())
     }
