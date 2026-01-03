@@ -24,7 +24,6 @@ pub struct GameConfig {
 }
 
 impl<'a> From<&AddGameRequest<'a>> for GameConfig {
-    /// Creates a [`GameConfigFile`] from [`AddGameRequest`]
     fn from(request: &AddGameRequest) -> Self {
         Self {
             id: request.id.to_string(),
@@ -39,6 +38,6 @@ impl<'a> From<&AddGameRequest<'a>> for GameConfig {
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
-pub struct GameConfigFile {
+pub struct VaultConfig {
     pub games: Vec<GameConfig>,
 }

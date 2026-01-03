@@ -6,9 +6,9 @@
 //! sync. Other modules extend its functionality using traits.
 
 use super::{DbManagerMetaExt, DbManagerSyncExt};
-use crate::models::KaguyaError;
+use crate::models::{KEY_SCHEMA_VERSION, KaguyaError};
 use rusqlite::Connection;
-use std::path::Path;
+use std::{fs::create_dir_all, path::Path};
 
 pub struct DbManager {
     pub conn: Connection,
@@ -17,20 +17,27 @@ pub struct DbManager {
 /// Database initialize and sync
 impl DbManager {
     // If no kaguya SQLite DB exists, initialize it.
-    // Otherwise, sync with game config file if needed
+    // Otherwise, sync with vault config if needed
     pub fn new(
         db_path: &impl AsRef<Path>,
-        game_config_path: &impl AsRef<Path>,
+        vault_config_path: &impl AsRef<Path>,
     ) -> Result<Self, KaguyaError> {
+        create_dir_all(
+            db_path
+                .as_ref()
+                .parent()
+                .expect("'db_path' should have parent."),
+        )?;
+
         let conn = Connection::open(db_path)?;
         let mut manager = Self { conn };
         manager.ensure_initialized()?;
-        manager.sync(game_config_path, false)?;
+        manager.sync(vault_config_path, false)?;
         Ok(manager)
     }
 
     fn ensure_initialized(&mut self) -> Result<(), KaguyaError> {
-        let result = self.get_meta_value("schema_version");
+        let result = self.get_meta_value(KEY_SCHEMA_VERSION);
         if result.is_err() {
             println!("Database not found. Initializing new database...");
             self.run_initialize_schema()?;

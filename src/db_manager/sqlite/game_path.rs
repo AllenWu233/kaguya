@@ -5,13 +5,13 @@
 //! functionality for upserting multiple paths and pruning obsolete ones.
 
 use super::DbManager;
-use crate::models::{GameConfigFile, KaguyaError, db::DbPathInfo};
+use crate::models::{KaguyaError, VaultConfig, db::DbPathInfo};
 use std::{collections::HashSet, path::PathBuf};
 
 pub trait DbManagerGamePathExt {
     fn prune_obsolete_paths(
         &mut self,
-        game_config_file: &GameConfigFile,
+        vault_config_file: &VaultConfig,
     ) -> Result<Vec<(String, String)>, KaguyaError>;
 
     fn get_all_db_paths(&self) -> Result<Vec<DbPathInfo>, KaguyaError>;
@@ -20,13 +20,13 @@ pub trait DbManagerGamePathExt {
 }
 
 impl DbManagerGamePathExt for DbManager {
-    // Prune database of game paths not found int the game config file.
+    // Prune database of game paths not found int the vault config.
     fn prune_obsolete_paths(
         &mut self,
-        game_config_file: &GameConfigFile,
+        vault_config_file: &VaultConfig,
     ) -> Result<Vec<(String, String)>, KaguyaError> {
         let db_paths = self.get_all_db_paths()?;
-        let config_paths: HashSet<(String, String)> = game_config_file
+        let config_paths: HashSet<(String, String)> = vault_config_file
             .games
             .iter()
             .flat_map(|game_config| {
@@ -99,7 +99,7 @@ impl DbManagerGamePathExt for DbManager {
     //     Ok(paths)
     // }
 
-    // Upsert game paths from the game config file
+    // Upsert game paths from the vault config
     fn upsert_paths(&mut self, game_id: i64, paths: &[PathBuf]) -> Result<(), KaguyaError> {
         let tx = self.conn.transaction()?;
         {

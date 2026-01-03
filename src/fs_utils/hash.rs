@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::{BufReader, Read};
 use std::path::Path;
 
-/// Calculate SHA-256 hash of the file, using for global config and games config files
+/// Calculate SHA-256 hash of the file
 pub fn calculate_file_hash<P: AsRef<Path>>(path: P) -> Result<String, KaguyaError> {
     let file = File::open(path.as_ref())?;
     let mut reader = BufReader::new(file);

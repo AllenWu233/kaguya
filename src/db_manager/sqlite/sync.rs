@@ -1,4 +1,4 @@
-//! Coordinates the synchronization between the database and the games config file.
+//! Coordinates the synchronization between the database and the vault config file.
 //!
 //! This module defines the [`DbManagerSyncExt`] trait, which provides the main
 //! [`sync`](DbManagerSyncExt::sync) method. This method acts as an orchestrator,
@@ -7,30 +7,35 @@
 
 use super::{DbManager, DbManagerGameExt, DbManagerGamePathExt, DbManagerMetaExt};
 use crate::{
-    db_manager::toml::read_toml_file, fs_utils::hash::calculate_file_hash, models::KaguyaError,
+    db_manager::toml::read_toml_file,
+    fs_utils::hash::calculate_file_hash,
+    models::{KEY_VAULT_CONFIG_HASH, KaguyaError},
 };
 use std::path::Path;
 
 pub trait DbManagerSyncExt {
-    fn sync(&mut self, game_config_path: &impl AsRef<Path>, force: bool)
-    -> Result<(), KaguyaError>;
+    fn sync(
+        &mut self,
+        vault_config_path: &impl AsRef<Path>,
+        force: bool,
+    ) -> Result<(), KaguyaError>;
 }
 
 impl DbManagerSyncExt for DbManager {
-    // Sync database if game config file have been changed
-    // Do nothing if game config file doesn't exist
+    // Sync database if vault config have been changed
+    // Do nothing if vault config doesn't exist
     fn sync(
         &mut self,
-        game_config_path: &impl AsRef<Path>,
+        vault_config_path: &impl AsRef<Path>,
         force: bool,
     ) -> Result<(), KaguyaError> {
-        let file_hash = calculate_file_hash(game_config_path).ok();
-        let db_hash_record = self.get_meta_value("game_config_file_hash").ok();
+        let file_hash = calculate_file_hash(vault_config_path).ok();
+        let db_hash_record = self.get_meta_value(KEY_VAULT_CONFIG_HASH).ok();
 
         if (force && file_hash.is_some()) || (!force && file_hash != db_hash_record) {
-            println!("Game config file has changed, syncing database...");
+            println!("vault config has changed, syncing database...");
             self.perform_sync(
-                game_config_path,
+                vault_config_path,
                 file_hash.expect("file_hash should be exist."),
             )?;
         }
@@ -39,20 +44,19 @@ impl DbManagerSyncExt for DbManager {
 }
 
 impl DbManager {
-    // Sync database with game config file
+    // Sync database with vault config
     fn perform_sync(
         &mut self,
-        game_config_path: &impl AsRef<Path>,
+        vault_config_path: &impl AsRef<Path>,
         new_hash: String,
     ) -> Result<(), KaguyaError> {
-        let game_config_file = read_toml_file(game_config_path)?;
+        let vault_config_file = read_toml_file(vault_config_path)?;
 
-        self.upsert_games_from_config(&game_config_file)?;
-        self.prune_obsolete_games(&game_config_file)?;
-        self.prune_obsolete_paths(&game_config_file)?;
+        self.upsert_games_from_config(&vault_config_file)?;
+        self.prune_obsolete_games(&vault_config_file)?;
+        self.prune_obsolete_paths(&vault_config_file)?;
 
-        // Update game_config_file_hash in the database
-        self.update_meta_value("game_config_file_hash", &new_hash)?;
+        self.update_meta_value(KEY_VAULT_CONFIG_HASH, &new_hash)?;
 
         println!("Database synced successfully.\n");
         Ok(())

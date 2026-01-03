@@ -2,7 +2,7 @@ use crate::{
     cli::AppContext,
     db_manager::{DbManager, toml::read_toml_file},
     fs_utils::archive::compress_to_tar_gz,
-    models::{BackupRequest, GameConfig, GameConfigFile, KaguyaError},
+    models::{BackupRequest, GameConfig, KaguyaError, VaultConfig},
     utils::{
         path::{find_game_ref, get_file_name},
         time::get_time_string,
@@ -27,7 +27,7 @@ impl VaultService {
     /// If '--id' is given, backup specific game.
     /// If '--id' and '--paths' are given, backup specific paths
     pub fn backup(&self, request: BackupRequest) -> Result<(), KaguyaError> {
-        let games = read_toml_file::<GameConfigFile>(&self.config.game_config_path)?.games;
+        let games = read_toml_file::<VaultConfig>(&self.config.vault_config_path)?.games;
 
         if request.id.is_some() {
             // Check whether game id exists or not.
@@ -63,7 +63,7 @@ impl VaultService {
         paths: Option<&Vec<PathBuf>>,
     ) -> Result<(), KaguyaError> {
         let time_string = get_time_string();
-        let backup_version_path = &self.config.vault_path.join(&game.id).join(time_string);
+        let backup_version_path = &self.config.vault_dir.join(&game.id).join(time_string);
 
         if let Some(p) = paths {
             // '--paths' are given

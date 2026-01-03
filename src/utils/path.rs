@@ -5,7 +5,7 @@ use crate::models::{
 use std::path::{Path, PathBuf};
 
 /// Get Kaguya config path, defaults to '$XDG_CONFIG_HOME/kaguya/config.toml' for Linux.
-pub fn get_config_path(path: &Option<impl AsRef<Path>>) -> Result<PathBuf, KaguyaError> {
+pub fn get_global_config_path(path: &Option<impl AsRef<Path>>) -> Result<PathBuf, KaguyaError> {
     if let Some(p) = path {
         Ok(p.as_ref().to_path_buf())
     } else {
@@ -21,8 +21,8 @@ pub fn get_config_path(path: &Option<impl AsRef<Path>>) -> Result<PathBuf, Kaguy
     }
 }
 
-/// Get Kaguya vault path, defaults to '~/.local/share/kaguya/vault' for Linux.
-pub fn get_vault_path(path: &Option<impl AsRef<Path>>) -> Result<PathBuf, KaguyaError> {
+/// Get Kaguya vault dir, defaults to '~/.local/share/kaguya/vault' for Linux.
+pub fn get_vault_dir(path: &Option<impl AsRef<Path>>) -> Result<PathBuf, KaguyaError> {
     if let Some(p) = path {
         Ok(p.as_ref().to_path_buf())
     } else {

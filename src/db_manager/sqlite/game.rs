@@ -6,17 +6,17 @@
 use std::collections::HashSet;
 
 use super::{DbManager, DbManagerGamePathExt};
-use crate::models::{Game, GameConfigFile, KaguyaError};
+use crate::models::{Game, KaguyaError, VaultConfig};
 
 pub trait DbManagerGameExt {
     fn upsert_games_from_config(
         &mut self,
-        game_config_file: &GameConfigFile,
+        vault_config_file: &VaultConfig,
     ) -> Result<(), KaguyaError>;
 
     fn prune_obsolete_games(
         &mut self,
-        game_config_file: &GameConfigFile,
+        vault_config_file: &VaultConfig,
     ) -> Result<Vec<String>, KaguyaError>;
 
     fn find_game_with_external_id(&self, external_id: &str) -> Result<i64, KaguyaError>;
@@ -25,12 +25,12 @@ pub trait DbManagerGameExt {
 }
 
 impl DbManagerGameExt for DbManager {
-    // Upsert games from the game config file
+    // Upsert games from the vault config
     fn upsert_games_from_config(
         &mut self,
-        game_config_file: &GameConfigFile,
+        vault_config_file: &VaultConfig,
     ) -> Result<(), KaguyaError> {
-        for game_config in &game_config_file.games {
+        for game_config in &vault_config_file.games {
             let game = Game::from(game_config);
 
             // Use reterned game id if fields except paths have been updated
@@ -45,13 +45,13 @@ impl DbManagerGameExt for DbManager {
         Ok(())
     }
 
-    // Prune database of games and paths not found int the game config file.
+    // Prune database of games and paths not found int the vault config.
     fn prune_obsolete_games(
         &mut self,
-        game_config_file: &GameConfigFile,
+        vault_config_file: &VaultConfig,
     ) -> Result<Vec<String>, KaguyaError> {
         let db_game_list = self.get_db_game_list()?;
-        let config_game_ids: HashSet<&str> = game_config_file
+        let config_game_ids: HashSet<&str> = vault_config_file
             .games
             .iter()
             .map(|config_game| config_game.id.as_ref())

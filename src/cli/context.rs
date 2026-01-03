@@ -4,33 +4,34 @@ use std::path::PathBuf;
 
 use crate::{
     cli::Cli,
-    models::{DB_FILE, GAME_CONFIG_FILE, KaguyaError},
-    utils::path::{get_config_path, get_vault_path},
+    models::{BACKUP_DIR, DB_FILE, KaguyaError, VAULT_CONFIG_FILE},
+    utils::path::{get_global_config_path, get_vault_dir},
 };
 
 /// Represents the parsed and resolved global context for the application.
-/// This struct holds global values like the vault path, dry-run flag, etc.
-/// Also, it generates a database connection.
 #[derive(Debug, Clone)]
 pub struct AppContext {
-    pub vault_path: PathBuf,
-    pub game_config_path: PathBuf,
-    pub config_path: PathBuf,
+    pub global_config_path: PathBuf,
+    pub vault_dir: PathBuf,
+    pub vault_config_path: PathBuf,
+    pub backup_dir: PathBuf,
     pub db_path: PathBuf,
     pub dry_run: bool,
 }
 
 impl AppContext {
     pub fn new(cli: &Cli) -> Result<Self, KaguyaError> {
-        let vault_path = get_vault_path(&cli.vault)?;
-        let config_path = get_config_path(&cli.config)?;
-        let game_config_path = vault_path.join(GAME_CONFIG_FILE);
-        let db_path = vault_path.join(DB_FILE);
+        let global_config_path = get_global_config_path(&cli.config)?;
+        let vault_dir = get_vault_dir(&cli.vault)?;
+        let vault_config_path = vault_dir.join(VAULT_CONFIG_FILE);
+        let backup_dir = vault_dir.join(BACKUP_DIR);
+        let db_path = vault_dir.join(DB_FILE);
 
         Ok(Self {
-            vault_path,
-            game_config_path,
-            config_path,
+            vault_dir,
+            vault_config_path,
+            global_config_path,
+            backup_dir,
             db_path,
             dry_run: cli.dry_run,
         })

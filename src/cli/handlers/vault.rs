@@ -11,7 +11,7 @@ pub fn handle_vault(
     subcommand: &VaultSubcommands,
     context: &AppContext,
 ) -> Result<(), KaguyaError> {
-    let db = DbManager::new(&context.db_path, &context.game_config_path)?;
+    let db = DbManager::new(&context.db_path, &context.vault_config_path)?;
     let vault_service = VaultService::new(context.clone(), db);
 
     match subcommand {
