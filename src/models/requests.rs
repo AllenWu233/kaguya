@@ -30,3 +30,11 @@ pub struct BackupRequest<'a> {
     pub id: Option<&'a str>,
     pub paths: Option<&'a Vec<PathBuf>>,
 }
+
+/// Represents a request to action restore, coming directly from the CLI
+#[derive(Debug)]
+pub struct RestoreRequest<'a> {
+    pub id: &'a str,
+    pub version: Option<&'a str>,
+    pub paths: Option<&'a Vec<PathBuf>>,
+}

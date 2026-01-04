@@ -87,7 +87,7 @@ where
     }
 }
 
-// Serialize [`GameConfigFile`] or [`GlobalConfig`] to TOML, and save it to toml file.
+// Serialize config to TOML, and save it to toml file.
 fn save_to_file(path: &impl AsRef<Path>, contents: &impl Serialize) -> Result<(), KaguyaError> {
     let toml_string = toml::to_string_pretty(contents)?;
     std::fs::write(path, toml_string)?;

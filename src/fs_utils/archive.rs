@@ -77,14 +77,18 @@ pub fn decompress_from_tar_gz(
 
     // Avoid nested same-name directories on extraction
     // e.g., ~/games/game-a/saves/saves
-    let unpack_dir = dst.parent().ok_or_else(|| {
-        KaguyaError::InvalidInput(format!(
-            "Destination path '{}' has no parent",
-            dst.display()
-        ))
-    })?;
-    if !unpack_dir.exists() {
-        create_dir_all(unpack_dir)?;
+    // let unpack_dir = dst.parent().ok_or_else(|| {
+    //     KaguyaError::InvalidInput(format!(
+    //         "Destination path '{}' has no parent",
+    //         dst.display()
+    //     ))
+    // })?;
+    // if !unpack_dir.exists() {
+    //     create_dir_all(unpack_dir)?;
+    // }
+
+    if !dst.exists() {
+        create_dir_all(dst)?;
     }
 
     // Build decoder
@@ -92,7 +96,7 @@ pub fn decompress_from_tar_gz(
     let decoder = GzDecoder::new(tar_gz);
     let mut archive = Archive::new(decoder);
 
-    archive.unpack(unpack_dir)?;
+    archive.unpack(dst)?;
 
     println!(
         "Successfully decompressed '{}' to '{}'.",
@@ -101,21 +105,4 @@ pub fn decompress_from_tar_gz(
     );
 
     Ok(())
-}
-
-/// Restore backup from src to dst.
-///
-/// Usage:
-/// ```
-/// let src: PathBuf = "~/.local/share/kaguya/vault/backups/2025-12-25_10-00-00/saves.tar.gz"
-/// let dst: PathBuf = "~/games/game-a/saves"
-///
-/// // Will restore to '~/games/game-a/saves'
-/// restore_backup_from_tar_gz(src, dst)?;
-/// ```
-pub fn restore_backup_from_tar_gz(
-    src: &impl AsRef<Path>,
-    dst: &impl AsRef<Path>,
-) -> Result<(), KaguyaError> {
-    todo!("Restore backup")
 }

@@ -2,7 +2,7 @@ use crate::{
     cli::AppContext,
     db_manager::{DbManager, toml::read_toml_file},
     fs_utils::archive::compress_to_tar_gz,
-    models::{BackupRequest, GameConfig, KaguyaError, VaultConfig},
+    models::{BackupRequest, GameConfig, KaguyaError, VaultConfig, requests::RestoreRequest},
     utils::{
         path::{find_game_ref, get_file_name},
         time::get_time_string,
@@ -109,5 +109,22 @@ impl VaultService {
         compress_to_tar_gz(&src, &backup_file)?;
         println!();
         Ok(())
+    }
+
+    pub fn restore(&mut self, request: &RestoreRequest) -> Result<(), KaguyaError> {
+        todo!("Restore action")
+        // let games = self.get_game_list()?;
+        // match find_game_ref(games, id) {
+        //     Some(game) => {
+        //         match
+        //     }
+        //     None => Err(KaguyaError::GameNotFound(
+        //         request.id.unwrap_or_default().to_string(),
+        //     )),
+        // }
+    }
+
+    fn get_game_list(&self) -> Result<Vec<GameConfig>, KaguyaError> {
+        Ok(read_toml_file::<VaultConfig>(&self.config.vault_config_path)?.games)
     }
 }

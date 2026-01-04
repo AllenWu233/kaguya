@@ -99,7 +99,7 @@ pub enum VaultSubcommands {
         #[arg(short, long)]
         id: Option<String>,
 
-        /// Game saves and configurations paths (use with '--id/-i <ID>')
+        /// Game saves and configurations paths (using with '--id/-i')
         /// Leave empty to backup all paths in the config
         #[arg(short, long, action = clap::ArgAction::Append, requires = "id")]
         paths: Option<Vec<PathBuf>>,
@@ -115,10 +115,10 @@ pub enum VaultSubcommands {
         #[arg(short, long)]
         version: Option<String>,
 
-        /// Game saves and configurations paths (use with '--id/-i <ID>')
+        /// Game saves and configurations paths.
         /// Leave empty to restore all paths in the config
         #[arg(short, long, action = clap::ArgAction::Append, requires = "id")]
-        paths: Vec<PathBuf>,
+        paths: Option<Vec<PathBuf>>,
     },
 
     /// Prune old backups based on retention policy,
@@ -128,11 +128,11 @@ pub enum VaultSubcommands {
         #[arg(short, long)]
         id: Option<String>,
 
-        /// Specific a backup version to delete (use with '--id/-d <ID>')
+        /// Specific a backup version to delete (using with '--id/-i')
         #[arg(short, long, requires = "id")]
         version: Option<String>,
 
-        /// Delete all the backup versions of the game (use with '--id/-d <ID>')
+        /// Delete all the backup versions of the game (using with '--id/-i')
         #[arg(short, long, requires = "id")]
         purge: bool,
     },
