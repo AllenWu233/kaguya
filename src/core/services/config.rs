@@ -1,7 +1,9 @@
 use crate::cli::AppContext;
 use crate::db_manager::DbManager;
 use crate::db_manager::sqlite::DbManagerSyncExt;
-use crate::db_manager::toml::{add_or_update_game_to_file, read_toml_file, rm_game_in_file};
+use crate::db_manager::toml::{
+    add_or_update_game_to_file, read_toml_file, rm_game_in_vault_config,
+};
 use crate::models::{AddGameRequest, GameConfig, KaguyaError, RmGameRequest, VaultConfig};
 
 /// Managing actions for 'kaguya config' command
@@ -20,9 +22,7 @@ impl ConfigService {
         std::fs::create_dir_all(&self.config.vault_dir)?;
 
         add_or_update_game_to_file(&self.config.vault_config_path, request)?;
-        self.db.sync(&self.config.vault_config_path, true)?;
-
-        Ok(())
+        self.db.sync(&self.config.vault_config_path, true)
     }
 
     pub fn get_game_list(&self) -> Result<Vec<GameConfig>, KaguyaError> {
@@ -31,13 +31,15 @@ impl ConfigService {
 
     /// Remove a game config by ID in the vault config
     /// If 'purge' flag is true, backups of the game will NOT retain!
-    pub fn rm_game(&self, request: &RmGameRequest) -> Result<(), KaguyaError> {
+    pub fn rm_game(&mut self, request: &RmGameRequest) -> Result<(), KaguyaError> {
         if *request.purge {
-            rm_game_in_file(&self.config.vault_config_path, request.id)?;
+            rm_game_in_vault_config(&self.config.vault_config_path, request.id)?;
 
             todo!("Todo: Remove game backups action")
         } else {
-            rm_game_in_file(&self.config.vault_config_path, request.id)
+            rm_game_in_vault_config(&self.config.vault_config_path, request.id)?;
         }
+
+        self.db.sync(&self.config.vault_config_path, true)
     }
 }

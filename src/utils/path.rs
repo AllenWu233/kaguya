@@ -43,12 +43,12 @@ pub fn get_file_name(path: impl AsRef<Path>) -> Option<String> {
         .map(|f| f.to_string_lossy().to_string())
 }
 
-/// Finds a game by ID in the configuration game list and return a mutable reference.
+/// Finds a game by ID in the game list and return a mutable reference.
 pub fn find_game_mut<'a>(games: &'a mut [GameConfig], id: &str) -> Option<&'a mut GameConfig> {
     games.iter_mut().find(|g| g.id == id)
 }
 
-/// Finds a game by ID in the configuration game list and return a reference.
+/// Finds a game by ID in the game list and return a reference.
 pub fn find_game_ref<'a>(games: &'a [GameConfig], id: &str) -> Option<&'a GameConfig> {
     games.iter().find(|g| g.id == id)
 }

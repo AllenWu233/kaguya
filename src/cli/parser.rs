@@ -23,7 +23,7 @@ pub struct Cli {
         short = 'v',
         long,
         value_name = "DIR",
-        help = "Path to the Kaguya vault directory. Overrides the 'vault_dir' in the config file"
+        help = "Path to the Kaguya vault directory. Overrides 'vault' value in the config file"
     )]
     pub vault: Option<PathBuf>,
 

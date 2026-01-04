@@ -58,8 +58,8 @@ fn apply_update(exist: &mut GameConfig, request: &AddGameRequest) -> Result<(), 
     Ok(())
 }
 
-/// Remove a game configuration in games.toml, backups remain.
-pub fn rm_game_in_file(path: &impl AsRef<Path>, id: &str) -> Result<(), KaguyaError> {
+/// Remove a game configuration in vault config, backups remain.
+pub fn rm_game_in_vault_config(path: &impl AsRef<Path>, id: &str) -> Result<(), KaguyaError> {
     // Deserialize and read string from config.toml
     let mut vault_config_contents: VaultConfig = read_toml_file(path)?;
 

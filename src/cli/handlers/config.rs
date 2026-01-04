@@ -52,20 +52,21 @@ fn handle_list(request: &ListGameRequest, service: &ConfigService) -> Result<(),
     if games.is_empty() {
         println!("Games list is empty, use 'kaguya config add' to add some games.");
         println!(
-            "If you already have a Kaguya vault, check '-v/--vault' option or 'vault' in the config file."
+            "If you already have a Kaguya vault, check '-v/--vault' option or 'vault' in the global config file."
         );
         return Ok(());
     }
 
     for game in &games {
-        println!("Game ID: {}", game.id);
-
         if *request.long {
+            println!("Game ID: {}", game.id);
             println!("Name: {}", game.name);
             println!("Comment: {}", game.comment.clone().unwrap_or_default());
+            println!("Saves and configuration paths:");
+        } else {
+            println!("{} ({}):", game.name, game.id);
         }
 
-        println!("Saves and configuration paths:");
         for path in &game.paths {
             let display_name = if *request.long {
                 path.to_string_lossy()

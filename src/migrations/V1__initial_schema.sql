@@ -52,7 +52,7 @@ CREATE TABLE backup_file (
     id INTEGER PRIMARY KEY,
     backup_id INTEGER NOT NULL,                       -- Associated backup ID
     original_path TEXT NOT NULL,                      -- The original path of the file
-    archive_filename TEXT NOT NULL,                   -- The filename of the compressed file stored in the vault
+    archive_path TEXT NOT NULL,                       -- The filename of the compressed file stored in the vault
     size_bytes INTEGER NOT NULL,                      -- Size of this compressed file
     checksum TEXT NOT NULL,                           -- Checksum for this compressed file
 

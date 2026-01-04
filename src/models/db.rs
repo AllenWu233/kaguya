@@ -54,3 +54,32 @@ pub struct DbPathInfo {
     pub external_id: String,
     pub original_path: String,
 }
+
+#[derive(Debug)]
+pub struct Backup {
+    pub id: Option<i64>,
+    pub game_id: i64,
+    pub version: String,
+    pub timestaqmp: String,
+    pub total_size_bytes: i64,
+    pub checksum: String,
+}
+
+#[derive(Debug)]
+pub struct BackupFile {
+    pub id: Option<i64>,
+    pub backup_id: i64,
+    pub original_path: String,
+    pub archive_path: String,
+    pub size_bytes: i64,
+    pub checksum: String,
+}
+
+#[derive(Debug)]
+pub struct Event {
+    pub id: Option<i64>,
+    pub event_type: String,
+    pub game_id: i64,
+    pub backup_id: Option<i64>,
+    pub timestamp: String,
+}

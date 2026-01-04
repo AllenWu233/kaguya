@@ -8,7 +8,10 @@ use crate::{
         time::get_time_string,
     },
 };
-use std::path::{Path, PathBuf};
+use std::{
+    fs::create_dir_all,
+    path::{Path, PathBuf},
+};
 
 /// Managing actions for 'kaguya vault' command
 pub struct VaultService {
@@ -29,31 +32,25 @@ impl VaultService {
     pub fn backup(&self, request: BackupRequest) -> Result<(), KaguyaError> {
         let games = read_toml_file::<VaultConfig>(&self.config.vault_config_path)?.games;
 
-        if request.id.is_some() {
-            // Check whether game id exists or not.
-            let game = find_game_ref(&games, request.id.unwrap());
-            if game.is_none() {
-                return Err(KaguyaError::GameNotFound(
-                    request.id.unwrap_or_default().to_string(),
-                ));
-            }
-            let game = game.unwrap();
+        match request.id {
+            // '--id' is given.
+            Some(id) => match find_game_ref(&games, id) {
+                // '--paths' is given or is None.
+                Some(game) => self.backup_single_game(game, request.paths),
 
-            if request.paths.is_some() {
-                // '--id' and '--paths' are given.
-                self.backup_single_game(game, request.paths)?;
-            } else {
-                // Only '--id' is given.
-                self.backup_single_game(game, None)?;
-                return Ok(());
-            }
-        } else {
+                None => Err(KaguyaError::GameNotFound(
+                    request.id.unwrap_or_default().to_string(),
+                )),
+            },
+
             // No arguments are given, Backup all games
-            for game in &games {
-                self.backup_single_game(game, None)?;
+            None => {
+                for game in &games {
+                    self.backup_single_game(game, None)?;
+                }
+                Ok(())
             }
         }
-        Ok(())
     }
 
     // Backup all saves and configuration of single game
@@ -62,26 +59,37 @@ impl VaultService {
         game: &GameConfig,
         paths: Option<&Vec<PathBuf>>,
     ) -> Result<(), KaguyaError> {
-        let time_string = get_time_string();
-        let backup_version_dir = &self.config.backup_dir.join(&game.id).join(time_string);
-
-        if let Some(p) = paths {
-            // '--paths' are given
-            for path in p {
-                if !game.paths.contains(path) {
+        let paths_to_backup = match paths {
+            // '--paths' is given.
+            Some(p) => {
+                // Check whether backup paths exist or not
+                if let Some(invalid_path) = p.iter().find(|path| !game.paths.contains(path)) {
                     return Err(KaguyaError::PathNotFound(
-                        path.to_string_lossy().to_string(),
+                        invalid_path.to_string_lossy().to_string(),
                     ));
                 }
-                std::fs::create_dir_all(backup_version_dir)?;
-                Self::backup_single_path(path, backup_version_dir)?;
+                p
             }
-        } else {
-            std::fs::create_dir_all(backup_version_dir)?;
-            for path in &game.paths {
-                Self::backup_single_path(path, backup_version_dir)?;
-            }
+            // No arguments.
+            None => &game.paths,
+        };
+
+        if paths_to_backup.is_empty() {
+            println!(
+                "No paths specified for game '{}' with ID '{}', skipping backup.",
+                &game.name, &game.id
+            );
+            return Ok(());
         }
+
+        let time_string = get_time_string();
+        let backup_version_dir = &self.config.backup_dir.join(&game.id).join(time_string);
+        create_dir_all(backup_version_dir)?;
+
+        for path in paths_to_backup {
+            Self::backup_single_path(path, backup_version_dir)?;
+        }
+
         Ok(())
     }
 
