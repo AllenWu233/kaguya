@@ -27,7 +27,7 @@ pub fn handle_config(
             let request = AddGameRequest {
                 id,
                 name,
-                paths: paths.map(|vec| vec.into_iter().map(|p| shrink_path(&p)).collect()),
+                paths,
                 comment,
             };
             config_service.add_or_update_game(request)?
