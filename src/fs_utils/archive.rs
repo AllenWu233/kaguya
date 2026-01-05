@@ -2,7 +2,7 @@
 
 use flate2::{Compression, read::GzDecoder, write::GzEncoder};
 use std::{
-    fs::{File, create_dir_all},
+    fs::{File, create_dir_all, metadata},
     path::Path,
 };
 use tar::Archive;
@@ -105,4 +105,9 @@ pub fn decompress_from_tar_gz(
     );
 
     Ok(())
+}
+
+/// Calculate file bytes for archive file
+pub fn calculate_file_bytes<P: AsRef<Path>>(path: P) -> Result<i64, KaguyaError> {
+    Ok(metadata(path)?.len() as i64)
 }

@@ -1,11 +1,22 @@
 use crate::{
     cli::AppContext,
-    db_manager::{DbManager, toml::read_toml_file},
-    fs_utils::archive::compress_to_tar_gz,
-    models::{BackupRequest, GameConfig, KaguyaError, VaultConfig, requests::RestoreRequest},
+    db_manager::{
+        DbManager,
+        sqlite::{DbManagerBackupExt, DbManagerGameExt},
+        toml::read_toml_file,
+    },
+    fs_utils::{
+        archive::{calculate_file_bytes, compress_to_tar_gz},
+        hash::calculate_entry_checksum,
+    },
+    models::{
+        BackupRequest, GameConfig, KaguyaError, VaultConfig,
+        db::{Backup, BackupFile},
+        requests::RestoreRequest,
+    },
     utils::{
         path::{find_game_ref, get_file_name},
-        time::get_time_string,
+        time::{get_time_string, get_timestamp},
     },
 };
 use std::{
@@ -29,7 +40,7 @@ impl VaultService {
     /// If no arguments are given, backup all games.
     /// If '--id' is given, backup specific game.
     /// If '--id' and '--paths' are given, backup specific paths
-    pub fn backup(&self, request: BackupRequest) -> Result<(), KaguyaError> {
+    pub fn backup(&mut self, request: BackupRequest) -> Result<(), KaguyaError> {
         let games = read_toml_file::<VaultConfig>(&self.config.vault_config_path)?.games;
 
         match request.id {
@@ -53,7 +64,7 @@ impl VaultService {
 
     // Backup all saves and configuration of single game
     fn backup_single_game(
-        &self,
+        &mut self,
         game: &GameConfig,
         paths: Option<&Vec<PathBuf>>,
     ) -> Result<(), KaguyaError> {
@@ -81,22 +92,49 @@ impl VaultService {
         }
 
         let time_string = get_time_string();
-        let backup_version_dir = &self.config.backup_dir.join(&game.id).join(time_string);
+        let backup_version_dir = &self.config.backup_dir.join(&game.id).join(&time_string);
         create_dir_all(backup_version_dir)?;
 
+        // Update DB
+        // Table `Backup`
+        let backup_record = Backup {
+            id: 0,
+            game_id: self.db.get_game_id_with_external_id(&game.id)?,
+            version: time_string,
+            timestamp: get_timestamp(),
+        };
+        let backup_record_game_id = self.db.insert_backup(&backup_record)?;
+
+        // Table `BackupFile`
+        let mut backup_file_records = Vec::new();
         for path in paths_to_backup {
-            Self::backup_single_path(path, backup_version_dir)?;
+            // Backup action
+            let archive_path = Self::backup_single_path(path, backup_version_dir)?;
+
+            let backup_file_record = BackupFile {
+                id: 0,
+                backup_id: backup_record_game_id,
+                original_path: path.to_string_lossy().to_string(),
+                archive_path: archive_path.clone().to_string_lossy().to_string(),
+                size_bytes: calculate_file_bytes(&archive_path)?,
+                checksum: calculate_entry_checksum(&archive_path)?,
+            };
+            backup_file_records.push(backup_file_record);
         }
+        self.db
+            .insert_backup_file(backup_record_game_id, backup_file_records)?;
 
         Ok(())
     }
 
-    // Backup single path to target directory, get file name for targer archive file
+    // Backup single path to target directory, get file name for targer archive file.
+    // Return archive file path.
+    //
     // e.g., '~/Games/game-a/saves/' -> '~/.local/bin/kaguya/vault/<ID>/<VERSION>/saves.tar.gz'
     fn backup_single_path(
         src: &impl AsRef<Path>,
         dst: &impl AsRef<Path>,
-    ) -> Result<(), KaguyaError> {
+    ) -> Result<PathBuf, KaguyaError> {
         let src = src.as_ref();
         let dst = dst.as_ref();
 
@@ -106,13 +144,13 @@ impl VaultService {
         println!("Compressing '{}'...", src.to_string_lossy());
         compress_to_tar_gz(&src, &backup_file)?;
         println!();
-        Ok(())
+        Ok(backup_file)
     }
 
     pub fn restore(&mut self, request: &RestoreRequest) -> Result<(), KaguyaError> {
         todo!("Restore action")
         // let games = self.get_game_list()?;
-        // match find_game_ref(games, id) {
+        // match find_game_ref(&games, &request.id) {
         //     Some(game) => {
         //         match
         //     }

@@ -52,6 +52,23 @@ where
     path.to_path_buf()
 }
 
+// /// Expands a path string (which may contain `~`) and a relative path
+// /// into a full, absolute `PathBuf`.
+// ///
+// /// This is useful for resolving paths that are relative to a known base directory,
+// /// like a game's saves directory.
+// pub fn expand_path_with_base(path: &impl AsRef<Path>) -> Result<PathBuf, KaguyaError> {
+//     let path = path.as_ref();
+//
+//     // If the path is already absolute, just normalize it and return.
+//     if path.is_absolute() {
+//         return Ok(path.to_path_buf());
+//     }
+//
+//     // If the path is relative, join it with the base directory.
+//     Ok(base_dir.as_ref().join(path))
+// }
+
 /// Get Kaguya config path, defaults to '$XDG_CONFIG_HOME/kaguya/config.toml' for Linux.
 pub fn get_global_config_path(path: &Option<impl AsRef<Path>>) -> Result<PathBuf, KaguyaError> {
     if let Some(p) = path {

@@ -8,7 +8,7 @@
 use super::{DbManager, DbManagerGameExt, DbManagerGamePathExt, DbManagerMetaExt};
 use crate::{
     db_manager::toml::read_toml_file,
-    fs_utils::hash::calculate_file_hash,
+    fs_utils::hash::calculate_entry_checksum,
     models::{KEY_VAULT_CONFIG_HASH, KaguyaError},
 };
 use std::path::Path;
@@ -29,7 +29,7 @@ impl DbManagerSyncExt for DbManager {
         vault_config_path: &impl AsRef<Path>,
         force: bool,
     ) -> Result<(), KaguyaError> {
-        let file_hash = calculate_file_hash(vault_config_path).ok();
+        let file_hash = calculate_entry_checksum(vault_config_path).ok();
         let db_hash_record = self.get_meta_value(KEY_VAULT_CONFIG_HASH).ok();
 
         if (force && file_hash.is_some()) || (!force && file_hash != db_hash_record) {

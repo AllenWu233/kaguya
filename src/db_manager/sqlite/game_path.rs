@@ -84,21 +84,6 @@ impl DbManagerGamePathExt for DbManager {
         Ok(paths)
     }
 
-    // /// Accept gamd_id, return game paths list from database.
-    // pub fn get_paths_of_single_game(&self, game_id: i64) -> Result<Vec<PathBuf>, KaguyaError> {
-    //     let mut stmt = self
-    //         .conn
-    //         .prepare("SELECT original_path FROM game_path WHERE game_id = ?1")?;
-    //
-    //     let paths_iter = stmt.query_map([game_id], |row| {
-    //         let original_path_str: String = row.get(0)?;
-    //         Ok(PathBuf::from(original_path_str))
-    //     })?;
-    //
-    //     let paths = paths_iter.collect::<Result<Vec<_>, rusqlite::Error>>()?;
-    //     Ok(paths)
-    // }
-
     // Upsert game paths from the vault config
     fn upsert_paths(&mut self, game_id: i64, paths: &[PathBuf]) -> Result<(), KaguyaError> {
         let tx = self.conn.transaction()?;

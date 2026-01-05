@@ -37,8 +37,6 @@ CREATE TABLE backup (
     game_id INTEGER NOT NULL,                         -- Associated game ID
     version TEXT NOT NULL,                            -- Backup version (A formatted local time string, e.g., 2025-12-25_10-00-00)
     timestamp TEXT NOT NULL,                          -- Timestamp of when the backup was created
-    total_size_bytes INTEGER NOT NULL,                -- Total size of the entire backup set
-    checksum TEXT NOT NULL,                           -- Checksum for the entire backup set
 
     -- Foreign key constraint: If a game is deleted, all its backups are NOT deleted in a cascade.
     FOREIGN KEY (game_id) REFERENCES game(id),

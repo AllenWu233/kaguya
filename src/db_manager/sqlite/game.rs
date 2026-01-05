@@ -19,7 +19,7 @@ pub trait DbManagerGameExt {
         vault_config_file: &VaultConfig,
     ) -> Result<Vec<String>, KaguyaError>;
 
-    fn find_game_with_external_id(&self, external_id: &str) -> Result<i64, KaguyaError>;
+    fn get_game_id_with_external_id(&self, external_id: &str) -> Result<i64, KaguyaError>;
     fn get_db_game_list(&self) -> Result<Vec<Game>, KaguyaError>;
     fn upsert_game(&self, game: &Game) -> Result<Option<i64>, KaguyaError>;
 }
@@ -37,7 +37,7 @@ impl DbManagerGameExt for DbManager {
             let game_id = if let Some(id) = self.upsert_game(&game)? {
                 id
             } else {
-                self.find_game_with_external_id(&game.external_id)?
+                self.get_game_id_with_external_id(&game.external_id)?
             };
 
             self.upsert_paths(game_id, &game_config.paths)?;
@@ -75,7 +75,7 @@ impl DbManagerGameExt for DbManager {
     }
 
     // Return game.id if game exists, according to Game ID: game(external_id)
-    fn find_game_with_external_id(&self, external_id: &str) -> Result<i64, KaguyaError> {
+    fn get_game_id_with_external_id(&self, external_id: &str) -> Result<i64, KaguyaError> {
         let sql = "SELECT id FROM game WHERE external_id = ?1";
         let id = self
             .conn
@@ -93,7 +93,7 @@ impl DbManagerGameExt for DbManager {
 
         let game_list_iter = stmt.query_map([], |row| {
             Ok(Game {
-                id: Some(row.get(0)?),
+                id: row.get(0)?,
                 external_id: row.get(1)?,
                 name: row.get(2)?,
                 comment: row.get(3)?,

@@ -9,6 +9,7 @@ pub use vault_config::{GameConfig, VaultConfig};
 pub mod constants;
 pub mod db;
 pub mod error;
+pub mod events;
 pub mod global_config;
 pub mod requests;
 pub mod vault_config;
