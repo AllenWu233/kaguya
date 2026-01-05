@@ -32,12 +32,12 @@ impl ConfigService {
     /// Remove a game config by ID in the vault config
     /// If 'purge' flag is true, backups of the game will NOT retain!
     pub fn rm_game(&mut self, request: &RmGameRequest) -> Result<(), KaguyaError> {
-        if *request.purge {
-            rm_game_in_vault_config(&self.config.vault_config_path, request.id)?;
+        if request.purge {
+            rm_game_in_vault_config(&self.config.vault_config_path, &request.id)?;
 
             todo!("Todo: Remove game backups action")
         } else {
-            rm_game_in_vault_config(&self.config.vault_config_path, request.id)?;
+            rm_game_in_vault_config(&self.config.vault_config_path, &request.id)?;
         }
 
         self.db.sync(&self.config.vault_config_path, true)

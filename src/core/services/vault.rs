@@ -34,13 +34,11 @@ impl VaultService {
 
         match request.id {
             // '--id' is given.
-            Some(id) => match find_game_ref(&games, id) {
+            Some(id) => match find_game_ref(&games, &id) {
                 // '--paths' is given or is None.
-                Some(game) => self.backup_single_game(game, request.paths),
+                Some(game) => self.backup_single_game(game, request.paths.as_ref()),
 
-                None => Err(KaguyaError::GameNotFound(
-                    request.id.unwrap_or_default().to_string(),
-                )),
+                None => Err(KaguyaError::GameNotFound(id)),
             },
 
             // No arguments are given, Backup all games

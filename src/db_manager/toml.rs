@@ -17,7 +17,7 @@ pub fn add_or_update_game_to_file(
     let mut vault_config_contents: VaultConfig = read_toml_file(vault_config_path)?;
 
     // Find the game if it exists
-    if let Some(existing_game) = find_game_mut(&mut vault_config_contents.games, request.id) {
+    if let Some(existing_game) = find_game_mut(&mut vault_config_contents.games, &request.id) {
         // Game exists, update it.
         println!("Updating existing game '{}' ...", &request.id);
         apply_update(existing_game, &request)?;
@@ -38,9 +38,9 @@ pub fn add_or_update_game_to_file(
 // See also `GameConfig`
 fn apply_update(exist: &mut GameConfig, request: &AddGameRequest) -> Result<(), KaguyaError> {
     // Merge paths: combine old and new, remove duplicates
-    if request.paths.is_some() {
+    if let Some(paths) = &request.paths {
         let mut combined_paths = exist.paths.clone();
-        for path in request.paths.unwrap() {
+        for path in paths {
             if !combined_paths.contains(path) {
                 combined_paths.push(path.to_path_buf());
             }
@@ -48,11 +48,12 @@ fn apply_update(exist: &mut GameConfig, request: &AddGameRequest) -> Result<(), 
         exist.paths = combined_paths;
     }
 
-    if request.name.is_some() {
-        exist.name = request.name.unwrap_or_default().to_string();
+    if let Some(name) = &request.name {
+        exist.name = name.to_string();
     }
+
     if request.comment.is_some() {
-        exist.comment = request.comment.map(|c| c.to_string());
+        exist.comment = request.comment.clone().map(|c| c.to_string());
     }
 
     Ok(())

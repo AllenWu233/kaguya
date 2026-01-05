@@ -5,11 +5,12 @@ use crate::{
     core::ConfigService,
     db_manager::DbManager,
     models::{AddGameRequest, KaguyaError, RmGameRequest, requests::ListGameRequest},
+    utils::path::shrink_path,
 };
 
 /// Handles all `kaguya config` subcommands.
 pub fn handle_config(
-    subcommand: &ConfigSubcommands,
+    subcommand: ConfigSubcommands,
     context: &AppContext,
 ) -> Result<(), KaguyaError> {
     let db = DbManager::new(&context.db_path, &context.vault_config_path)?;
@@ -25,9 +26,9 @@ pub fn handle_config(
             // Generate an 'AddGameRequest', send it to core service to add a new game
             let request = AddGameRequest {
                 id,
-                name: name.as_deref(),
-                paths: paths.as_ref(),
-                comment: comment.as_deref(),
+                name,
+                paths: paths.map(|vec| vec.into_iter().map(|p| shrink_path(&p)).collect()),
+                comment,
             };
             config_service.add_or_update_game(request)?
         }
@@ -58,7 +59,7 @@ fn handle_list(request: &ListGameRequest, service: &ConfigService) -> Result<(),
     }
 
     for game in &games {
-        if *request.long {
+        if request.long {
             println!("Game ID: {}", game.id);
             println!("Name: {}", game.name);
             println!("Comment: {}", game.comment.clone().unwrap_or_default());
@@ -68,7 +69,7 @@ fn handle_list(request: &ListGameRequest, service: &ConfigService) -> Result<(),
         }
 
         for path in &game.paths {
-            let display_name = if *request.long {
+            let display_name = if request.long {
                 path.to_string_lossy()
             } else {
                 path.file_name().unwrap_or_default().to_string_lossy()

@@ -10,7 +10,7 @@ fn main() -> Result<(), KaguyaError> {
 
     // dbg!(&cli, &context);
 
-    match &cli.command {
+    match cli.command {
         Commands::Completion => todo!("Generate shell completion"),
 
         Commands::Config(subcommand) => {

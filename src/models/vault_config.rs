@@ -23,15 +23,28 @@ pub struct GameConfig {
     pub keep_versions: Option<i64>,
 }
 
-impl<'a> From<&AddGameRequest<'a>> for GameConfig {
+impl From<&AddGameRequest> for GameConfig {
     fn from(request: &AddGameRequest) -> Self {
         Self {
             id: request.id.to_string(),
             name: request
                 .name
-                .map_or_else(|| request.id.to_string(), |n| n.to_string()),
-            paths: request.paths.map(|p| p.to_vec()).unwrap_or_default(),
-            comment: request.comment.map(|c| c.to_string()),
+                .clone()
+                .unwrap_or_else(|| request.id.to_string()),
+            paths: request.paths.clone().unwrap_or_default(),
+            comment: request.comment.clone(),
+            keep_versions: None,
+        }
+    }
+}
+
+impl From<AddGameRequest> for GameConfig {
+    fn from(request: AddGameRequest) -> Self {
+        Self {
+            id: request.id.clone(),
+            name: request.name.unwrap_or_else(|| request.id.to_string()),
+            paths: request.paths.unwrap_or_default(),
+            comment: request.comment,
             keep_versions: None,
         }
     }

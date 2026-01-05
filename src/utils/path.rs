@@ -2,14 +2,62 @@ use crate::models::{
     DEFAULT_CONFIG_DIR, DEFAULT_CONFIG_FILE, DEFAULT_VAULT_DIR, DEFAULT_VAULT_SUBDIR, GameConfig,
     KaguyaError,
 };
+use dirs::{config_dir, home_dir};
 use std::path::{Path, PathBuf};
+
+/// Shrink an absolute path back to a tilde-prefixed one.
+///
+/// If the path is inside the user's home directory, it will be replaced with `~`.
+/// Otherwise, the original path is returned unchanged.
+///
+/// # Examples
+///
+/// ```
+/// # use std::path::PathBuf;
+/// let home = dir::home_dir().unwrap();
+/// let path = home.join("Documents");
+/// assert_eq!(shrink_path(&path), PathBuf::from("~/Documents"));
+///
+/// let config_home = dirs::config_dir().unwrap();
+/// let path = config_home.join("kaguya");
+/// assert_eq!(shrink_path(&path), PathBuf::from("~/.config/kaguya"));
+/// ```
+pub fn shrink_path<P>(path: &P) -> PathBuf
+where
+    P: AsRef<Path> + ?Sized,
+{
+    let path = path.as_ref();
+    if let Some(home_dir) = home_dir()
+        && let Ok(relative_path) = path.strip_prefix(&home_dir)
+    {
+        return PathBuf::from("~").join(relative_path);
+    }
+    path.to_path_buf()
+}
+
+/// Expands a path string that may contain a tilde `~` into a `PathBuf`.
+///
+/// The tilde `~` will be expanded to the user's home directory.
+/// Otherwise, the original path is returned unchanged.
+pub fn expand_path<P>(path: &P) -> PathBuf
+where
+    P: AsRef<Path> + ?Sized,
+{
+    let path = path.as_ref();
+    if let Some(home_dir) = home_dir()
+        && let Ok(relative_path) = path.strip_prefix("~")
+    {
+        return home_dir.join(relative_path);
+    }
+    path.to_path_buf()
+}
 
 /// Get Kaguya config path, defaults to '$XDG_CONFIG_HOME/kaguya/config.toml' for Linux.
 pub fn get_global_config_path(path: &Option<impl AsRef<Path>>) -> Result<PathBuf, KaguyaError> {
     if let Some(p) = path {
         Ok(p.as_ref().to_path_buf())
     } else {
-        let config_dir = dirs::config_dir().ok_or_else(|| {
+        let config_dir = config_dir().ok_or_else(|| {
             KaguyaError::PathNotFound("Could not find local data directory.".to_string())
         })?;
 
