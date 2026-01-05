@@ -43,18 +43,13 @@ pub fn compress_to_tar_gz(
         tar.append_dir_all(src_file_name, src)?;
     }
 
-    println!(
-        "Successfully compressed '{}' to '{}'.",
-        src.display(),
-        dst.display()
-    );
-
     tar.finish()?;
     Ok(())
 }
 
 /// Decompress a tar.gz file to a target directory.
 /// Assuming that the archive file always preserves the top-level directory.
+/// In other words, `dst` must be a directory.
 ///
 /// Usage:
 /// ```
@@ -75,18 +70,6 @@ pub fn decompress_from_tar_gz(
         return Err(KaguyaError::PathNotFound(src.to_string_lossy().to_string()));
     }
 
-    // Avoid nested same-name directories on extraction
-    // e.g., ~/games/game-a/saves/saves
-    // let unpack_dir = dst.parent().ok_or_else(|| {
-    //     KaguyaError::InvalidInput(format!(
-    //         "Destination path '{}' has no parent",
-    //         dst.display()
-    //     ))
-    // })?;
-    // if !unpack_dir.exists() {
-    //     create_dir_all(unpack_dir)?;
-    // }
-
     if !dst.exists() {
         create_dir_all(dst)?;
     }
@@ -97,12 +80,6 @@ pub fn decompress_from_tar_gz(
     let mut archive = Archive::new(decoder);
 
     archive.unpack(dst)?;
-
-    println!(
-        "Successfully decompressed '{}' to '{}'.",
-        src.display(),
-        dst.display()
-    );
 
     Ok(())
 }

@@ -8,6 +8,7 @@ use crate::{
     fs_utils::{
         archive::{calculate_file_bytes, compress_to_tar_gz},
         hash::calculate_entry_checksum,
+        restore::restore_archive,
     },
     models::{
         BackupRequest, GameConfig, KaguyaError, VaultConfig,
@@ -148,16 +149,28 @@ impl VaultService {
     }
 
     pub fn restore(&mut self, request: &RestoreRequest) -> Result<(), KaguyaError> {
-        todo!("Restore action")
-        // let games = self.get_game_list()?;
-        // match find_game_ref(&games, &request.id) {
-        //     Some(game) => {
-        //         match
-        //     }
-        //     None => Err(KaguyaError::GameNotFound(
-        //         request.id.unwrap_or_default().to_string(),
-        //     )),
-        // }
+        let games = self.get_game_list()?;
+        // '--id'
+        match find_game_ref(&games, &request.id) {
+            Some(game) => {
+                // '--paths'
+                let restore_paths = match &request.paths {
+                    Some(p) => p,
+                    None => &game.paths,
+                };
+                let game_id = self.db.get_game_id_with_external_id(&game.id)?;
+
+                for path in restore_paths {
+                    let archive_path =
+                        self.db
+                            .get_archive_file_path(game_id, request.version.clone(), path)?; // '--version'
+
+                    restore_archive(&archive_path, &path)?;
+                }
+                Ok(())
+            }
+            None => Err(KaguyaError::GameNotFound(request.id.clone())),
+        }
     }
 
     fn get_game_list(&self) -> Result<Vec<GameConfig>, KaguyaError> {

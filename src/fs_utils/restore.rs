@@ -2,7 +2,7 @@ use crate::fs_utils::archive::decompress_from_tar_gz;
 use crate::models::KaguyaError;
 use rand::{Rng, distr::Alphanumeric};
 use scopeguard::defer;
-use std::fs::{create_dir_all, remove_dir_all, rename};
+use std::fs::{create_dir_all, remove_dir_all, remove_file, rename};
 use std::path::Path;
 use std::process;
 
@@ -51,7 +51,16 @@ pub fn restore_archive(src: &impl AsRef<Path>, dst: &impl AsRef<Path>) -> Result
     decompress_from_tar_gz(&src, &temp_dir)?;
 
     if dst.exists() {
-        remove_dir_all(dst)?;
+        if dst.is_dir() {
+            remove_dir_all(dst)?;
+        } else if dst.is_file() {
+            remove_file(dst)?;
+        } else {
+            return Err(KaguyaError::InvalidInput(format!(
+                "Invalid type of path: {}",
+                dst.display()
+            )));
+        }
     }
     rename(unpacked_path, dst)?;
 

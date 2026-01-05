@@ -1,3 +1,7 @@
+use std::path::{Path, PathBuf};
+
+use rusqlite::params;
+
 use super::DbManager;
 use crate::models::{
     KaguyaError,
@@ -12,6 +16,13 @@ pub trait DbManagerBackupExt {
         game_id: i64,
         files: Vec<BackupFile>,
     ) -> Result<(), KaguyaError>;
+
+    fn get_archive_file_path(
+        &self,
+        game_id: i64,
+        version: Option<String>,
+        original_path: &impl AsRef<Path>,
+    ) -> Result<PathBuf, KaguyaError>;
 }
 
 impl DbManagerBackupExt for DbManager {
@@ -50,5 +61,41 @@ impl DbManagerBackupExt for DbManager {
         } // stmt end life here
         tx.commit()?;
         Ok(())
+    }
+
+    fn get_archive_file_path(
+        &self,
+        game_id: i64,
+        version: Option<String>,
+        original_path: &impl AsRef<Path>,
+    ) -> Result<PathBuf, KaguyaError> {
+        // Convert Path to String for SQLite comparison (TEXT field)
+        let path_str = original_path.as_ref().to_string_lossy().to_string();
+
+        let archive_path_str: String = match version {
+            // Case 1: Specific version provided
+            Some(ver) => self.conn.query_row(
+                "SELECT bf.archive_path 
+             FROM backup b 
+             JOIN backup_file bf ON b.id = bf.backup_id 
+             WHERE b.game_id = ?1 AND b.version = ?2 AND bf.original_path = ?3",
+                params![game_id, ver, path_str],
+                |row| row.get(0),
+            )?,
+
+            // Case 2: Version is None, find the latest by timestamp
+            None => self.conn.query_row(
+                "SELECT bf.archive_path 
+             FROM backup b 
+             JOIN backup_file bf ON b.id = bf.backup_id 
+             WHERE b.game_id = ?1 AND bf.original_path = ?2
+             ORDER BY b.timestamp DESC 
+             LIMIT 1",
+                params![game_id, path_str],
+                |row| row.get(0),
+            )?,
+        };
+
+        Ok(PathBuf::from(archive_path_str))
     }
 }
