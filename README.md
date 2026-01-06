@@ -39,7 +39,6 @@ kaguya vault restore --id <ID> [--version <VERSION>] [--paths <PATH1> [<PATH2>..
 
 ```shell
 cargo install kaguya
-
 ```
 
 #### From local source
@@ -48,7 +47,6 @@ cargo install kaguya
 git clone https://github.com/AllenWu233/kaguya
 cd kaguya
 cargo install --path .
-
 ```
 
 ## Uninstallation
