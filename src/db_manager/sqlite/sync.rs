@@ -33,7 +33,7 @@ impl DbManagerSyncExt for DbManager {
         let db_hash_record = self.get_meta_value(KEY_VAULT_CONFIG_HASH).ok();
 
         if (force && file_hash.is_some()) || (!force && file_hash != db_hash_record) {
-            println!("vault config has changed, syncing database...");
+            println!("Vault config has been changed, syncing database...");
             self.perform_sync(
                 vault_config_path,
                 file_hash.expect("file_hash should be exist."),

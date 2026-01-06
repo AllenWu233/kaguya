@@ -5,6 +5,8 @@
 
 use std::collections::HashSet;
 
+use rusqlite::params;
+
 use super::{DbManager, DbManagerGamePathExt};
 use crate::models::{Game, KaguyaError, VaultConfig};
 
@@ -109,51 +111,68 @@ impl DbManagerGameExt for DbManager {
 
     /// Update or insert a game record to the DB, return game.id
     fn upsert_game(&self, game: &Game) -> Result<Option<i64>, KaguyaError> {
-        let mut stmt = self.conn.prepare(
-            "INSERT INTO game (external_id, name, comment, keep_versions, created_at, updated_at)
-                VALUES (?1, ?2, ?3, ?4, ?5, ?6)
-                ON CONFLICT(external_id) DO UPDATE SET
-                    name = excluded.name,
-                    comment = excluded.comment,
-                    keep_versions = excluded.keep_versions,
-                    updated_at = excluded.updated_at
-                WHERE name IS NOT excluded.name
-                    OR comment IS NOT excluded.comment
-                    OR keep_versions IS NOT excluded.keep_versions",
-        )?;
+        let sql = "
+            INSERT INTO game (external_id, name, comment, keep_versions, created_at, updated_at)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+            ON CONFLICT(external_id) DO UPDATE SET
+                name = excluded.name,
+                comment = excluded.comment,
+                keep_versions = excluded.keep_versions,
+                updated_at = excluded.updated_at
+            WHERE name IS NOT excluded.name
+                OR comment IS NOT excluded.comment
+                OR keep_versions IS NOT excluded.keep_versions
+            RETURNING id
+            ";
 
-        stmt.execute((
-            &game.external_id,
-            &game.name,
-            &game.comment,
-            &game.keep_versions,
-            &game.created_at,
-            &game.updated_at,
-        ))?;
-
-        let last_id = self.conn.last_insert_rowid();
-
-        // let new_game_added = last_id > 0;
-        // let exist_game_updated = self.conn.changes() > 0;
-        //
-        // if new_game_added {
-        //     // INSERT
-        //     println!(
-        //         "Added new game '{}' with ID: '{}'.",
-        //         game.name, game.external_id
-        //     );
-        // } else if exist_game_updated {
-        //     // UPDATE
-        //     println!(
-        //         "Updated existing game '{}' with ID: '{}'.",
-        //         game.name, game.external_id
-        //     );
-        // }
-
-        if last_id == 0 {
-            Ok(None)
-        } else {
-            Ok(Some(last_id))
+        match self.conn.query_row(
+            sql,
+            params![
+                &game.external_id,
+                &game.name,
+                &game.comment,
+                &game.keep_versions,
+                &game.created_at,
+                &game.updated_at,
+            ],
+            |row| row.get::<_, i64>(0),
+        ) {
+            Ok(id) => Ok(Some(id)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(KaguyaError::from(e)),
         }
     }
+
+    // /// Update or insert a game record to the DB, return game.id
+    // fn upsert_game(&self, game: &Game) -> Result<Option<i64>, KaguyaError> {
+    //     let mut stmt = self.conn.prepare(
+    //         "INSERT INTO game (external_id, name, comment, keep_versions, created_at, updated_at)
+    //             VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+    //             ON CONFLICT(external_id) DO UPDATE SET
+    //                 name = excluded.name,
+    //                 comment = excluded.comment,
+    //                 keep_versions = excluded.keep_versions,
+    //                 updated_at = excluded.updated_at
+    //             WHERE name IS NOT excluded.name
+    //                 OR comment IS NOT excluded.comment
+    //                 OR keep_versions IS NOT excluded.keep_versions",
+    //     )?;
+    //
+    //     stmt.execute((
+    //         &game.external_id,
+    //         &game.name,
+    //         &game.comment,
+    //         &game.keep_versions,
+    //         &game.created_at,
+    //         &game.updated_at,
+    //     ))?;
+    //
+    //     let last_id = self.conn.last_insert_rowid();
+    //
+    //     if last_id == 0 {
+    //         Ok(None)
+    //     } else {
+    //         Ok(Some(last_id))
+    //     }
+    // }
 }

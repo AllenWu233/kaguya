@@ -5,6 +5,7 @@ use crate::{
     core::VaultService,
     db_manager::DbManager,
     models::{BackupRequest, KaguyaError, requests::RestoreRequest},
+    utils::path::{to_absolute_path, transform_paths_option},
 };
 
 pub fn handle_vault(subcommand: VaultSubcommands, context: &AppContext) -> Result<(), KaguyaError> {
@@ -13,12 +14,19 @@ pub fn handle_vault(subcommand: VaultSubcommands, context: &AppContext) -> Resul
 
     match subcommand {
         VaultSubcommands::Backup { id, paths } => {
-            let request = BackupRequest { id, paths };
+            let request = BackupRequest {
+                id,
+                paths: transform_paths_option(paths, to_absolute_path)?,
+            };
             vault_service.backup(request)?
         }
 
         VaultSubcommands::Restore { id, version, paths } => {
-            let request = RestoreRequest { id, version, paths };
+            let request = RestoreRequest {
+                id,
+                version,
+                paths: transform_paths_option(paths, to_absolute_path)?,
+            };
             vault_service.restore(&request)?
         }
 

@@ -3,7 +3,10 @@ use crate::models::{
     KaguyaError,
 };
 use dirs::{config_dir, home_dir};
-use std::path::{Path, PathBuf};
+use std::{
+    env::current_dir,
+    path::{Path, PathBuf},
+};
 
 /// Shrink an absolute path back to a tilde-prefixed one.
 ///
@@ -22,7 +25,7 @@ use std::path::{Path, PathBuf};
 /// let path = config_home.join("kaguya");
 /// assert_eq!(shrink_path(&path), PathBuf::from("~/.config/kaguya"));
 /// ```
-pub fn shrink_path<P>(path: &P) -> PathBuf
+pub fn shrink_path<P>(path: &P) -> Result<PathBuf, KaguyaError>
 where
     P: AsRef<Path> + ?Sized,
 {
@@ -30,16 +33,16 @@ where
     if let Some(home_dir) = home_dir()
         && let Ok(relative_path) = path.strip_prefix(&home_dir)
     {
-        return PathBuf::from("~").join(relative_path);
+        return Ok(PathBuf::from("~").join(relative_path));
     }
-    path.to_path_buf()
+    Ok(path.to_path_buf())
 }
 
 /// Expands a path string that may contain a tilde `~` into a `PathBuf`.
 ///
 /// The tilde `~` will be expanded to the user's home directory.
 /// Otherwise, the original path is returned unchanged.
-pub fn expand_path<P>(path: &P) -> PathBuf
+pub fn expand_path<P>(path: &P) -> Result<PathBuf, KaguyaError>
 where
     P: AsRef<Path> + ?Sized,
 {
@@ -47,27 +50,66 @@ where
     if let Some(home_dir) = home_dir()
         && let Ok(relative_path) = path.strip_prefix("~")
     {
-        return home_dir.join(relative_path);
+        return Ok(home_dir.join(relative_path));
     }
-    path.to_path_buf()
+    Ok(path.to_path_buf())
 }
 
-// /// Expands a path string (which may contain `~`) and a relative path
-// /// into a full, absolute `PathBuf`.
-// ///
-// /// This is useful for resolving paths that are relative to a known base directory,
-// /// like a game's saves directory.
-// pub fn expand_path_with_base(path: &impl AsRef<Path>) -> Result<PathBuf, KaguyaError> {
-//     let path = path.as_ref();
-//
-//     // If the path is already absolute, just normalize it and return.
-//     if path.is_absolute() {
-//         return Ok(path.to_path_buf());
-//     }
-//
-//     // If the path is relative, join it with the base directory.
-//     Ok(base_dir.as_ref().join(path))
-// }
+/// Converts a relative path to an absolu
+///
+/// - If the path is already absolute, it is normalized (canonicalized) if it exists.
+/// - If the path is relative, it is joined with the current working directory.
+/// - If the path does not exist (so canonicalization fails), it returns the
+///   expanded absolute path as-is (containing `..` or `.` if not resolved).te path.
+pub fn to_absolute_path<P>(path: &P) -> Result<PathBuf, KaguyaError>
+where
+    P: AsRef<Path> + ?Sized,
+{
+    let path = path.as_ref();
+
+    if path.is_absolute() {
+        return path.canonicalize().or_else(|_| Ok(path.to_path_buf()));
+    }
+
+    // Path is relative
+    let current_dir = current_dir()?;
+    let absolute_path = current_dir.join(path);
+
+    // Try to normalize. If the path doesn't exist yet (e.g., add a new path to backup),
+    // canonicalize fails, so we return the joined absolute path directly.
+    absolute_path.canonicalize().or_else(|_| Ok(absolute_path))
+}
+
+/// Transforms an optional vector of paths using a provided function.
+///
+/// This generic function allows you to apply any of the previously defined
+/// path utility functions (like `shrink_path`, `expand_path`, or `to_absolute_path`)
+/// to a list of paths within an `Option`.
+///
+/// # Arguments
+/// * `paths` - An optional vector of paths (e.g., from config).
+/// * `transform_fn` - A function that takes a `&Path` and returns a `Result<PathBuf, KaguyaError>`.
+///
+/// # Examples
+///
+/// ```
+/// // Convert to absolute paths
+/// let abs_paths = transform_paths_option(paths, to_absolute_path)?;
+///
+/// // Shrink paths (replace home dir with ~)
+/// let short_paths = transform_paths_option(paths, shrink_path)?;
+/// ```
+pub fn transform_paths_option<F>(
+    paths: Option<Vec<PathBuf>>,
+    transform_fn: F,
+) -> Result<Option<Vec<PathBuf>>, KaguyaError>
+where
+    F: Fn(&Path) -> Result<PathBuf, KaguyaError>,
+{
+    paths
+        .map(|vec| vec.into_iter().map(|p| transform_fn(&p)).collect())
+        .transpose()
+}
 
 /// Get Kaguya config path, defaults to '$XDG_CONFIG_HOME/kaguya/config.toml' for Linux.
 pub fn get_global_config_path(path: &Option<impl AsRef<Path>>) -> Result<PathBuf, KaguyaError> {

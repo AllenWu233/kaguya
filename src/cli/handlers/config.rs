@@ -5,7 +5,7 @@ use crate::{
     core::ConfigService,
     db_manager::DbManager,
     models::{AddGameRequest, KaguyaError, RmGameRequest, requests::ListGameRequest},
-    utils::path::shrink_path,
+    utils::path::{to_absolute_path, transform_paths_option},
 };
 
 /// Handles all `kaguya config` subcommands.
@@ -27,9 +27,10 @@ pub fn handle_config(
             let request = AddGameRequest {
                 id,
                 name,
-                paths,
+                paths: transform_paths_option(paths, to_absolute_path)?,
                 comment,
             };
+
             config_service.add_or_update_game(request)?
         }
 

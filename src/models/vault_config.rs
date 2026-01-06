@@ -52,5 +52,23 @@ impl From<AddGameRequest> for GameConfig {
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct VaultConfig {
+    pub backup: BackupSettings,
     pub games: Vec<GameConfig>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct BackupSettings {
+    pub auto_prune: bool,
+    pub keep_versions: u32,
+    pub compression: String,
+}
+
+impl Default for BackupSettings {
+    fn default() -> Self {
+        Self {
+            auto_prune: false,
+            keep_versions: 0,
+            compression: "tar.gz".to_string(),
+        }
+    }
 }
