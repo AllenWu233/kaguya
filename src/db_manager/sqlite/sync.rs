@@ -7,7 +7,7 @@
 
 use super::{DbManager, DbManagerGameExt, DbManagerGamePathExt, DbManagerMetaExt};
 use crate::{
-    db_manager::toml::read_toml_file,
+    db_manager::toml::read_vault_config,
     fs_utils::hash::calculate_entry_checksum,
     models::{KEY_VAULT_CONFIG_HASH, KaguyaError},
 };
@@ -50,7 +50,7 @@ impl DbManager {
         vault_config_path: &impl AsRef<Path>,
         new_hash: String,
     ) -> Result<(), KaguyaError> {
-        let vault_config_file = read_toml_file(vault_config_path)?;
+        let vault_config_file = read_vault_config(vault_config_path)?;
 
         self.upsert_games_from_config(&vault_config_file)?;
         self.prune_obsolete_games(&vault_config_file)?;

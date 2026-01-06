@@ -25,6 +25,7 @@ impl ConfigService {
         self.db.sync(&self.config.vault_config_path, true)
     }
 
+    /// Read original game list from vault config
     pub fn get_game_list(&self) -> Result<Vec<GameConfig>, KaguyaError> {
         Ok(read_toml_file::<VaultConfig>(&self.config.vault_config_path)?.games)
     }

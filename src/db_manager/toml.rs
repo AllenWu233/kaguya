@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     models::{AddGameRequest, GameConfig, KaguyaError, VaultConfig},
-    utils::path::find_game_mut,
+    utils::path::{expand_path, find_game_mut, shrink_path, transform_paths},
 };
 use std::path::Path;
 
@@ -14,7 +14,7 @@ pub fn add_or_update_game_to_file(
     request: AddGameRequest,
 ) -> Result<(), KaguyaError> {
     // Deserialize and read string from games.toml
-    let mut vault_config_contents: VaultConfig = read_toml_file(vault_config_path)?;
+    let mut vault_config_contents: VaultConfig = read_vault_config(vault_config_path)?;
 
     // Find the game if it exists
     if let Some(existing_game) = find_game_mut(&mut vault_config_contents.games, &request.id) {
@@ -30,7 +30,7 @@ pub fn add_or_update_game_to_file(
     }
     println!("Game added or updated successfully!");
 
-    save_to_file(vault_config_path, &vault_config_contents)
+    save_vault_config(vault_config_path, &mut vault_config_contents)
 }
 
 // Update existing [`GameConfig`] with [`AddGameRequest`]
@@ -62,7 +62,7 @@ fn apply_update(exist: &mut GameConfig, request: &AddGameRequest) -> Result<(), 
 /// Remove a game configuration in vault config, backups remain.
 pub fn rm_game_in_vault_config(path: &impl AsRef<Path>, id: &str) -> Result<(), KaguyaError> {
     // Deserialize and read string from config.toml
-    let mut vault_config_contents: VaultConfig = read_toml_file(path)?;
+    let mut vault_config_contents: VaultConfig = read_vault_config(path)?;
 
     let original_len = vault_config_contents.games.len();
     vault_config_contents.games.retain(|g| *g.id != *id);
@@ -71,7 +71,21 @@ pub fn rm_game_in_vault_config(path: &impl AsRef<Path>, id: &str) -> Result<(), 
         return Err(KaguyaError::GameNotFound(id.to_string()));
     }
 
-    save_to_file(path, &vault_config_contents)
+    save_vault_config(path, &mut vault_config_contents)
+}
+
+pub fn read_vault_config(path: &impl AsRef<Path>) -> Result<VaultConfig, KaguyaError> {
+    let mut vault_config = read_toml_file::<VaultConfig>(path)?;
+    vault_config.games = vault_config
+        .games
+        .into_iter()
+        .map(|mut game| {
+            game.paths = transform_paths(game.paths, expand_path)?;
+            Ok(game)
+        })
+        .collect::<Result<Vec<_>, KaguyaError>>()?;
+
+    Ok(vault_config)
 }
 
 // Read .toml file, deserialize from TOML to string
@@ -86,6 +100,23 @@ where
     } else {
         Ok(T::default())
     }
+}
+
+fn save_vault_config(
+    path: &impl AsRef<Path>,
+    vault_config: &mut VaultConfig,
+) -> Result<(), KaguyaError> {
+    vault_config.games = vault_config
+        .games
+        .clone()
+        .into_iter()
+        .map(|mut game| {
+            game.paths = transform_paths(game.paths, shrink_path)?;
+            Ok(game)
+        })
+        .collect::<Result<Vec<_>, KaguyaError>>()?;
+
+    save_to_file(path, vault_config)
 }
 
 // Serialize config to TOML, and save it to toml file.

@@ -3,7 +3,7 @@ use crate::{
     db_manager::{
         DbManager,
         sqlite::{DbManagerBackupExt, DbManagerGameExt},
-        toml::read_toml_file,
+        toml::read_vault_config,
     },
     fs_utils::{
         archive::{calculate_file_bytes, compress_to_tar_gz},
@@ -11,7 +11,7 @@ use crate::{
         restore::restore_archive,
     },
     models::{
-        BackupRequest, GameConfig, KaguyaError, VaultConfig,
+        BackupRequest, GameConfig, KaguyaError,
         db::{Backup, BackupFile},
         requests::RestoreRequest,
     },
@@ -42,7 +42,7 @@ impl VaultService {
     /// If '--id' is given, backup specific game.
     /// If '--id' and '--paths' are given, backup specific paths
     pub fn backup(&mut self, request: BackupRequest) -> Result<(), KaguyaError> {
-        let games = read_toml_file::<VaultConfig>(&self.config.vault_config_path)?.games;
+        let games = read_vault_config(&self.config.vault_config_path)?.games;
 
         match request.id {
             // '--id' is given.
@@ -209,6 +209,6 @@ impl VaultService {
     }
 
     fn get_game_list(&self) -> Result<Vec<GameConfig>, KaguyaError> {
-        Ok(read_toml_file::<VaultConfig>(&self.config.vault_config_path)?.games)
+        Ok(read_vault_config(&self.config.vault_config_path)?.games)
     }
 }

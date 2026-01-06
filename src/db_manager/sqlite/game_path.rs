@@ -5,7 +5,10 @@
 //! functionality for upserting multiple paths and pruning obsolete ones.
 
 use super::DbManager;
-use crate::models::{KaguyaError, VaultConfig, db::DbPathInfo};
+use crate::{
+    models::{KaguyaError, VaultConfig, db::DbPathInfo},
+    utils::path::{expand_path, shrink_path},
+};
 use std::{collections::HashSet, path::PathBuf};
 
 pub trait DbManagerGamePathExt {
@@ -26,6 +29,7 @@ impl DbManagerGamePathExt for DbManager {
         vault_config_file: &VaultConfig,
     ) -> Result<Vec<(String, String)>, KaguyaError> {
         let db_paths = self.get_all_db_paths()?;
+
         let config_paths: HashSet<(String, String)> = vault_config_file
             .games
             .iter()
@@ -73,10 +77,16 @@ impl DbManagerGamePathExt for DbManager {
         )?;
 
         let path_iter = stmt.query_map([], |row| {
+            let path: String = row.get(2)?;
+            let original_path = expand_path(&path)
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_string();
+
             Ok(DbPathInfo {
                 id: row.get(0)?,
                 external_id: row.get(1)?,
-                original_path: row.get(2)?,
+                original_path,
             })
         })?;
 
@@ -95,7 +105,7 @@ impl DbManagerGamePathExt for DbManager {
             )?;
 
             for path in paths {
-                stmt.execute((game_id, path.to_string_lossy().to_string()))?;
+                stmt.execute((game_id, shrink_path(path)?.to_string_lossy().to_string()))?;
             }
         } // stmt end life here
         tx.commit()?;

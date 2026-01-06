@@ -3,9 +3,12 @@ use std::path::{Path, PathBuf};
 use rusqlite::params;
 
 use super::DbManager;
-use crate::models::{
-    KaguyaError,
-    db::{Backup, BackupFile},
+use crate::{
+    models::{
+        KaguyaError,
+        db::{Backup, BackupFile},
+    },
+    utils::path::expand_path,
 };
 
 pub trait DbManagerBackupExt {
@@ -96,6 +99,7 @@ impl DbManagerBackupExt for DbManager {
             )?,
         };
 
-        Ok(PathBuf::from(archive_path_str))
+        // Ok(PathBuf::from(archive_path_str))
+        expand_path(&archive_path_str)
     }
 }

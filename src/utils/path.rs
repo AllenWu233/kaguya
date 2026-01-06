@@ -111,6 +111,14 @@ where
         .transpose()
 }
 
+/// Transforms a vector of paths using a provided function.
+pub fn transform_paths<F>(paths: Vec<PathBuf>, transform_fn: F) -> Result<Vec<PathBuf>, KaguyaError>
+where
+    F: Fn(&Path) -> Result<PathBuf, KaguyaError>,
+{
+    paths.into_iter().map(|p| transform_fn(&p)).collect()
+}
+
 /// Get Kaguya config path, defaults to '$XDG_CONFIG_HOME/kaguya/config.toml' for Linux.
 pub fn get_global_config_path(path: &Option<impl AsRef<Path>>) -> Result<PathBuf, KaguyaError> {
     if let Some(p) = path {
